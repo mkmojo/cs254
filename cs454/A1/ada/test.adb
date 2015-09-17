@@ -5,7 +5,7 @@ use Ada.Integer_Text_IO;
 
 procedure prog is
    arraySize : Integer := 0;
-   type myArray is array(Integer range <>) of Float;
+   type myArray is array(Integer range <>) of Integer;
 begin
    -- Get Array size from user.
    put_line("How big would you like the array?");

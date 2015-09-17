@@ -4,10 +4,9 @@ P ZX
 
 RN
 RV NO_IO
-RV NO_RECURSION
 RV SPARK_05
 
-U main%b		main.adb		d1b455f3 NE OO SU
+U prog%b		test.adb		6e788b65 NE OO SU IL
 W ada%s			ada.ads			ada.ali
 W ada.integer_text_io%s	a-inteio.ads		a-inteio.ali
 W ada.text_io%s		a-textio.adb		a-textio.ali
@@ -23,7 +22,7 @@ D a-tiinio.ads		20150506105328 aa04e5d6 ada.text_io.integer_io%s
 D a-unccon.ads		20150506105331 f9eb8f06 ada.unchecked_conversion%s
 D interfac.ads		20150506105327 6033a23f interfaces%s
 D i-cstrea.ads		20150506105327 e53d8b8e interfaces.c_streams%s
-D main.adb		20150917181850 1f922983 main%b
+D test.adb		20150917180153 a05ef715 prog%b
 D system.ads		20150506105329 1d274481 system%s
 D s-crtl.ads		20150506105326 0ebbdb71 system.crtl%s
 D s-exctab.ads		20150506105331 54135002 system.exception_table%s
@@ -42,16 +41,13 @@ X 3 a-inteio.ads
 18K13*Integer_Text_IO[8|46] 12|3w10 4r9
 X 7 a-textio.ads
 49K13*Text_IO 471e16 12|1w10 2r9
+263U14*Put_Line 12|11s4
 X 8 a-tiinio.ads
-56U14*Get 12|31s5[3|18]
-66U14*Put 12|33s5[3|18]
-X 12 main.adb
-7U11*Main 7b11 34l5 34t9
-8i5 N{integer} 31m9 33r9
-9A10 Ans(character)<integer>
-11U15 DFS 11b15 11>19 11>31 16s13 18s13 19s13 21l9 21t12 25s9
-11i19 N{integer} 13r12 16r17 18r17 19r17
-11i31 L{integer} 15r15 16r22 18r22 19r20
-23U15 Trees 23b15 23>21 26l9 26t14 32s5
-23i21 N{integer} 25r13
+56U14*Get 12|12s4[3|18]
+X 12 test.adb
+6U11*prog 6b11 21l5 21t9
+7i4 arraySize{integer} 12m8 15r29 17r19
+8A9 myArray(integer)<integer> 15r18
+15a7 theArray{8A9} 18m10
+17i11 I{integer} 18r19 18r25
 

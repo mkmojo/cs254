@@ -10,7 +10,14 @@ procedure Main is
 
     procedure DFS(N: Integer; L: Integer) is
     begin
-        return;
+        if N = 0 then
+            return;
+        elsif L = 0 then
+            DFS(N-1, L+1);
+        else
+            DFS(N-1, L+1);
+            DFS(N, L-1);
+        end if;
     end DFS;
 
     procedure Trees(N: Integer) is
@@ -22,6 +29,6 @@ procedure Main is
 
 begin
     get(N);
+    Trees(18);
     put(N);
-    put(ans);
 end Main;
