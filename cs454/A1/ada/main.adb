@@ -6,11 +6,13 @@ use Ada.Integer_Text_IO;
 
 procedure Main is
     N : integer := 0;
+    Count : integer := 0;
     type Ans is array(Integer range <>) of Character;
 
     procedure DFS(N: Integer; L: Integer) is
     begin
         if N = 0 then
+            Count := Count + 1;
             return;
         elsif L = 0 then
             DFS(N-1, L+1);
@@ -25,10 +27,10 @@ procedure Main is
         DFS(N-1, 0);
     end Trees;
 
-
-
 begin
+    put_line("How many points do you have?");
     get(N);
-    Trees(18);
-    put(N);
+    Trees(N);
+    put(Count);
+    new_line;
 end Main;
