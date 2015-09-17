@@ -37,6 +37,7 @@ procedure Main is
     end Trees;
 
 begin
+    new_line;
     put_line("How many points do you have?");
     get(N_points);
     Trees(N_points);

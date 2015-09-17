@@ -24,8 +24,8 @@ let rec dfs level total = match (level,total) with
                 ( ans := !ans ^ ")" ; dfs (level-1) (total); ans := strip_last_char !ans ))
 ;;
 
-let print_tree n_nodes = 
+let trees n_nodes = 
     dfs 0 (n_nodes-1)
 ;;
 
-print_tree (int_of_string Sys.argv.(1)) 
+trees (int_of_string Sys.argv.(1)) 

@@ -39,7 +39,10 @@ public class PrintTree
 
     public static void Main(string[] args)
     {
-        PrintTree p = new PrintTree(Int32.Parse(args[0]));
+        string line;
+        Console.WriteLine("\nHow many points do you have?");
+        line = Console.ReadLine();
+        PrintTree p = new PrintTree(Int32.Parse(line));
         p.print_tree();
     }
 

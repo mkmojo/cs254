@@ -1,2 +1,2 @@
 all:
-	swipl main.pl
+	swipl --quiet main.pl

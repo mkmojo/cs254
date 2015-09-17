@@ -3,41 +3,42 @@
 #include<stdlib.h>
 using namespace std;
 
-int count=0;
+int total=0;
 string ans="(";
 
-void do_dfs(int level, int total)
+void do_dfs(int level, int n)
 {
-    if(total == 0){
+    if(n == 0){
         cout << ans;
-        cout << string(2*count-ans.length(), ')') <<endl;
+        cout << string((2*total)-ans.length(), ')') <<endl;
         return;
     }
     if(level == 0){
         ans+="(";
-        do_dfs(level+1, total-1);
+        do_dfs(level+1, n-1);
         ans.pop_back();
     } else{
         ans+="(";
-        do_dfs(level+1, total-1);
+        do_dfs(level+1, n-1);
         ans.pop_back();
         ans+=")";
-        do_dfs(level-1, total);
+        do_dfs(level-1, n);
         ans.pop_back();
     }
 }
 
-void dfs(char* n)
+void dfs(int n)
 {
-    int nn = atoi(n);
-    count = nn;
-    do_dfs(0, nn-1);
+    total = n;
+    do_dfs(0, n-1);
 }
 
 int main(int argc, char** argv)
 {
-    dfs(argv[1]);
-    cout << count << endl;
+    int n;
+    cout<< "\nHow many points do you have?" << endl;
+    cin >>  n;
+    dfs(n);
     return 0;
 }
 
