@@ -1,0 +1,4 @@
+1. How to use:
+    make
+    ./main.out 5 // or the number of points you have
+

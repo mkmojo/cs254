@@ -1,0 +1,4 @@
+1. assignment for ada is := 
+2. can I return void from a function?
+    does not seem so.
+    Another way to do so is to have another procedure.

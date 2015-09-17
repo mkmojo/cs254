@@ -1,0 +1,8 @@
+1. ;; is the marker for one code block
+2. let rec has to be explicit for recursive function
+3. use let at the outter most place works as a global variable
+4. need to use ref keyword to define something that is modifiable.
+For ref variable, need to use ! to access the content of it. 
+5. inside pattern maching can use keyword 'as' to name the thing that is evaluate and use it in the expression. 
+6. use String.make 5 '*' to make repeated char strings
+7. use open to include module 

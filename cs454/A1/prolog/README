@@ -1,0 +1,5 @@
+1. How to run:
+    make
+2. When testing, if you are looking for all possible trees for 
+N nodes, please use N-1 as the parameter to invoke program.
+For example, when you want all trees for 5 points use, trees(4, L).

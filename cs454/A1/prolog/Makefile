@@ -1,0 +1,2 @@
+all:
+	swipl main.pl
