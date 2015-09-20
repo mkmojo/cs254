@@ -1,44 +1,31 @@
 #include<iostream>
 #include<string>
-#include<stdlib.h>
 using namespace std;
 
-int total=0;
-string ans="(";
-
-void do_dfs(int level, int n)
+void dfs(int level, int n, string ans)
 {
     if(n == 0){
-        cout << ans;
-        cout << string((2*total)-ans.length(), ')') <<endl;
-        return;
+        cout << '(' << (ans + string(level, ')')) << ')' << endl;
     }
-    if(level == 0){
-        ans+="(";
-        do_dfs(level+1, n-1);
-        ans.pop_back();
-    } else{
-        ans+="(";
-        do_dfs(level+1, n-1);
-        ans.pop_back();
-        ans+=")";
-        do_dfs(level-1, n);
-        ans.pop_back();
+    else if(level == 0){
+        dfs(level+1, n-1, ans + string(1, '('));
+    }else{
+        dfs(level+1, n-1, ans + string(1, '(') );
+        dfs(level-1, n, ans + string(1, ')') );
     }
 }
 
-void dfs(int n)
+void trees(int n)
 {
-    total = n;
-    do_dfs(0, n-1);
+    dfs(0, n-1, "");
 }
 
 int main(int argc, char** argv)
 {
     int n;
     cout<< "\nHow many points do you have?" << endl;
-    cin >>  n;
-    dfs(n);
+    cin >> n;
+    trees(n);
     return 0;
 }
 
