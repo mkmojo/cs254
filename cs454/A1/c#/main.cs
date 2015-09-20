@@ -32,7 +32,7 @@ public class PrintTree
         this.n_nodes = x;
     }
 
-    public void print_tree()
+    public void trees()
     {
         dfs(0, n_nodes-1);
     }
@@ -43,7 +43,7 @@ public class PrintTree
         Console.WriteLine("\nHow many points do you have?");
         line = Console.ReadLine();
         PrintTree p = new PrintTree(Int32.Parse(line));
-        p.print_tree();
+        p.trees();
     }
 
 }

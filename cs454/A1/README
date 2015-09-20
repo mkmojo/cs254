@@ -3,8 +3,7 @@
 2. Input Format:
     One integer number from stdin.
 3. Output Format:
-    List of possible braces combinations + 
-    Total number of answers for this paticular input.
+    List of possible braces combinations
     ((((()))))
     (((()())))
     (((())()))
@@ -19,15 +18,20 @@
     (()(())())
     (()()(()))
     (()()()())
-             14
 4. Limitations:
     The program does not carefully examine input format.
     So bad input will cause program to terminate. 
 
 5. Special Features:
-   Used Unbouneded String to emulate the behavior of stack
+   - Used Unbouneded String to emulate the behavior of stack
    and did a optimization base on the obeservation that 
    all answers are of same length.
    The optimizaiton is to keep appending ')' until answer
    string is as long as twice the length of number of nodes
    given.
+
+
+6. Extra credit 
+   - I implemented with one additional language: C++.
+   - This sequence is Catalan Number:
+        T(n) =  2n! / ((n+1)!*n!)
