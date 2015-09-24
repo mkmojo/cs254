@@ -1,6 +1,6 @@
 /* definitions the scanner shares with the parser */
 
-typedef enum {t_while, t_if, t_read, t_write, t_id, t_literal, t_gets,
+typedef enum {t_while, t_if, t_end, t_read, t_write, t_id, t_literal, t_gets,
                 t_add, t_sub, t_mul, t_div, t_lparen, t_rparen, t_eof} token;
 
 extern char token_image[100];
