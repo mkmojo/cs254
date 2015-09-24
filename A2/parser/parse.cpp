@@ -44,7 +44,7 @@ void factor_tail ();
 void factor ();
 void add_op ();
 void mul_op ();
-void r_op();
+void r_op ();
 
 void program () {
     switch (input_token) {
@@ -100,12 +100,20 @@ void stmt () {
             cond ();
             expr ();
             match (t_end);
+            break;
         case t_while:
             cout << "predict stmt --> while clause" << endl;
             match (t_while);
             cond ();
             stmt_list();
             match (t_end);
+            break;
+        case t_lparen:
+        case t_literal:
+        case t_add:
+        case t_mul:
+        case t_eof:
+            return;
         default: error ();
     }
 }
