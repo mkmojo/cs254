@@ -1,8 +1,8 @@
 /* Complete recursive descent parser for the calculator language.
-    Builds on figure 2.17.  Prints a trace of productions predicted and
-    tokens matched.  Does no error recovery: prints "syntax error" and
-    dies on invalid input.
-*/
+   Builds on figure 2.17.  Prints a trace of productions predicted and
+   tokens matched.  Does no error recovery: prints "syntax error" and
+   dies on invalid input.
+   */
 
 #include "stdio.h"
 #include "stdlib.h"
@@ -10,7 +10,7 @@
 #include "scan.h"
 
 const char* names[] = {"read", "write", "id", "literal", "gets",
-                       "add", "sub", "mul", "div", "lparen", "rparen", "eof"};
+    "add", "sub", "mul", "div", "lparen", "rparen", "eof"};
 
 static token input_token;
 

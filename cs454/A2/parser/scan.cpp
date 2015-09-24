@@ -5,6 +5,7 @@
 #include "stdlib.h"
 #include "string.h"
 #include "ctype.h"
+#include <iostream>
 
 #include "scan.h"
 
@@ -12,7 +13,7 @@ char token_image[100];
 
 token scan() {
     static int c = ' ';
-        /* next available char; extra (int) width accommodates EOF */
+    /* next available char; extra (int) width accommodates EOF */
     int i = 0;              /* index into token_image */
 
     /* skip white space */
@@ -41,7 +42,7 @@ token scan() {
     } else switch (c) {
         case ':':
             if ((c = getchar()) != '=') {
-                fprintf(stderr, "error\n");
+                std::cerr << "error" << std::endl;
                 exit(1);
             } else {
                 c = getchar();
@@ -55,7 +56,7 @@ token scan() {
         case '(': c = getchar(); return t_lparen;
         case ')': c = getchar(); return t_rparen;
         default:
-            printf("error\n");
-            exit(1);
+                  std::cout << "error" << std::endl;
+                  exit(1);
     }
 }
