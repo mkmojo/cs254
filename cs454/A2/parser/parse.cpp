@@ -24,10 +24,10 @@ void error () {
 
 void match (token expected) {
     if (input_token == expected) {
-        printf ("matched %s", names[input_token]);
+        cout << "matched " <<  names[input_token];
         if (input_token == t_id || input_token == t_literal)
-            printf (": %s", token_image);
-        printf ("\n");
+            cout << ": " << token_image; 
+        cout << endl;
         input_token = scan ();
     }
     else error ();
