@@ -30,6 +30,8 @@ token scan() {
         token_image[i] = '\0';
         if (!strcmp(token_image, "read")) return t_read;
         else if (!strcmp(token_image, "write")) return t_write;
+        else if (!strcmp(token_image, "if")) return t_if;
+        else if (!strcmp(token_image, "while")) return t_while;
         else return t_id;
     }
     else if (isdigit(c)) {
@@ -45,6 +47,7 @@ token scan() {
                 std::cerr << "error" << std::endl;
                 exit(1);
             } else {
+                //this line is interesting
                 c = getchar();
                 return t_gets;
             }
@@ -55,6 +58,40 @@ token scan() {
         case '/': c = getchar(); return t_div;
         case '(': c = getchar(); return t_lparen;
         case ')': c = getchar(); return t_rparen;
+        case '<': 
+                  if ((c = getchar()) == '=') {
+                      c = getchar();
+                      return t_le;
+                  } else {
+                      return t_lt;
+                  }
+                  break;
+        case '>': 
+                  if ((c = getchar()) == '=') {
+                      c = getchar();
+                      return t_ge;
+                  } else {
+                      return t_gt;
+                  }
+                  break;
+        case '=': 
+                  if ((c = getchar()) == '=') {
+                      c = getchar();
+                      return t_equal;
+                  } else {
+                      std::cerr << "error" << std::endl;
+                      exit(1);
+                  }
+                  break;
+        case '!':
+                  if ((c = getchar()) == '=') {
+                      c = getchar();
+                      return t_nequal;
+                  } else {
+                      std::cerr << "error" << std::endl;
+                      exit(1);
+                  }
+                  break;
         default:
                   std::cout << "error" << std::endl;
                   exit(1);
