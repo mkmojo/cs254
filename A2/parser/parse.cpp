@@ -12,7 +12,8 @@
 
 using namespace std;
 
-const char* names[] = {"read", "write", "id", "literal", "gets",
+const char* names[] = {"equal", "n_equal", "less_than", "greater_than", "less_equal", "greater_equal", 
+    "while", "if", "end",  "read", "write", "id", "literal", "gets",
     "add", "sub", "mul", "div", "lparen", "rparen", "eof"};
 
 static token input_token;
@@ -65,11 +66,14 @@ void stmt_list () {
         case t_id:
         case t_read:
         case t_write:
+        case t_if:
+        case t_while:
             cout << "predict stmt_list --> stmt stmt_list" << endl;
             stmt ();
             stmt_list ();
             break;
         case t_eof:
+        case t_end:
             cout << "predict stmt_list --> epsilon" << endl;
             break;          /*  epsilon production */
         default: error ();
@@ -95,17 +99,17 @@ void stmt () {
             expr ();
             break;
         case t_if:
-            cout << "predict stmt --> if clause" << endl;
+            cout << "predict stmt --> if cond stmt_list end" << endl;
             match (t_if);
             cond ();
-            expr ();
+            stmt_list ();
             match (t_end);
             break;
         case t_while:
-            cout << "predict stmt --> while clause" << endl;
+            cout << "predict stmt --> while cond stmt_list end" << endl;
             match (t_while);
             cond ();
-            stmt_list();
+            stmt_list ();
             match (t_end);
             break;
         case t_lparen:
@@ -113,6 +117,7 @@ void stmt () {
         case t_add:
         case t_mul:
         case t_eof:
+            cout << "predict stmt --> epsilon" << endl;
             return;
         default: error ();
     }
@@ -125,6 +130,11 @@ void cond () {
         case t_id:
         case t_literal:
         case t_lparen:
+            cout << "predict cond --> expr r_op expr" << endl;
+            expr ();
+            r_op ();
+            expr ();
+            break;
         default: error();
     }
 }
@@ -156,6 +166,15 @@ void term_tail () {
         case t_read:
         case t_write:
         case t_eof:
+        case t_if:
+        case t_while:
+        case t_equal:
+        case t_nequal:
+        case t_lt:
+        case t_gt:
+        case t_le:
+        case t_ge:
+        case t_end:
             cout << "predict term_tail --> epsilon" << endl;
             break;          /*  epsilon production */
         default: error ();
@@ -191,6 +210,15 @@ void factor_tail () {
         case t_read:
         case t_write:
         case t_eof:
+        case t_if:
+        case t_while:
+        case t_equal:
+        case t_nequal:
+        case t_lt:
+        case t_gt:
+        case t_le:
+        case t_ge:
+        case t_end:
             cout << "predict factor_tail --> epsilon" << endl;
             break;          /*  epsilon production */
         default: error ();
