@@ -32,6 +32,7 @@ token scan() {
         else if (!strcmp(token_image, "write")) return t_write;
         else if (!strcmp(token_image, "if")) return t_if;
         else if (!strcmp(token_image, "while")) return t_while;
+        else if (!strcmp(token_image, "end")) return t_end;
         else return t_id;
     }
     else if (isdigit(c)) {
@@ -58,6 +59,14 @@ token scan() {
         case '/': c = getchar(); return t_div;
         case '(': c = getchar(); return t_lparen;
         case ')': c = getchar(); return t_rparen;
+        case '$':
+                  if( (c = getchar()) == '$') {
+                      c = getchar();
+                      return t_eof;
+                  }else{
+                      std::cerr << "error" << std::endl;
+                  }
+                  break;
         case '<': 
                   if ((c = getchar()) == '=') {
                       c = getchar();
@@ -93,6 +102,7 @@ token scan() {
                   }
                   break;
         default:
+                  std::cout << "DEBUG: " << c <<std::endl;
                   std::cout << "error" << std::endl;
                   exit(1);
     }
