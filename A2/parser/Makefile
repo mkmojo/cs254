@@ -4,10 +4,13 @@
 # Note that rule for goal (parse) must be the first one in this file.
 
 parse: parse.o scan.o
-	g++ -o parse parse.o scan.o
+	g++ -o parse parse.o scan.o -g -std=c++11
 
 clean:
 	rm -f scan.o parse.o parse
+
+test:
+	cat test.txt | ./parse
 
 parse.o: scan.h
 scan.o: scan.h

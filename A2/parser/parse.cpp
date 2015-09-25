@@ -12,7 +12,8 @@
 
 using namespace std;
 
-const char* names[] = {"equal", "n_equal", "less_than", "greater_than", "less_equal", "greater_equal", 
+const char* names[] = {
+    "equal", "n_equal", "less_than", "greater_than", "less_equal", "greater_equal", 
     "while", "if", "end",  "read", "write", "id", "literal", "gets",
     "add", "sub", "mul", "div", "lparen", "rparen", "eof"};
 
