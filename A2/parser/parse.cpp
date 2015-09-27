@@ -23,10 +23,23 @@ map<string, set<token> > first_sets;
 map<string, set<token> > follow_sets; 
 map<string, bool> EPS;
 
+static token input_token;
+
+struct syntax_error{
+	string err_orig;
+	syntax_error(){}
+	syntax_error(string orig):err_orig(orig){}
+};
+
+bool isInSet(token t, set<token> given_set){
+	if(given_set.find(t) != given_set.end()) return true;
+	else return false;
+}
+
 void check_for_error(string symbol, set<token> follow_set){
 	if( !isInSet(input_token, first_sets[symbol]) &&
 			( !EPS["stmt_list"] or !isInSet(input_token, follow_sets[symbol]))) {
-		error();
+		throw syntax_error("From check_for_error");
 		do{
 			input_token = scan();
 		}while(!( isInSet(input_token, first_sets[symbol]) ||
@@ -49,49 +62,6 @@ void init_first_sets(){
 	first_sets["stmt_list"] = (set<token> (first_stmt_list, first_stmt_list + 5));
 	cout << "DEBUG first map init, size is: " << first_sets.size() <<endl;
 	cout << "DEBUG first map init, size of first key is: " << first_sets["stmt_list"].size() <<endl;
-}
-
-void init_EPS(){
-	EPS["stmt_list"] = true;
-}
-
-
-static token input_token;
-
-map<string, set<token> > first_sets; 
-map<string, set<token> > follow_sets; 
-map<string, bool> EPS;
-
-struct syntax_error{
-	string err_orig;
-	syntax_error(){}
-	syntax_error(string orig):err_orig(orig){}
-};
-
-
-void init_follow_sets(){
-	token follow_stmt_list[] = {t_eof, t_end};
-	follow_sets["stmt_list"] = (set<token> (follow_stmt_list, follow_stmt_list + 2));
-
-	token follow_factor_tail[] = {t_add, t_sub, t_rparen, t_id, t_read, t_write, t_eof,
-		t_if, t_while, t_end, t_equal, t_nequal, t_lt, t_gt, t_le, t_ge};
-	follow_sets["factor_tail"] = (set<token> (follow_factor_tail, follow_factor_tail + 16));
-
-	token follow_term_tail[] = {t_rparen, t_id, t_read, t_write, t_eof,
-		t_if, t_while, t_end, t_equal, t_nequal, t_lt, t_gt, t_le, t_ge};
-	follow_sets["term_tail"] = (set<token> (follow_term_tail, follow_term_tail + 14));
-}
-
-void init_first_sets(){
-	token first_stmt_list[] = {t_id, t_read, t_write, t_if, t_while};
-	//TODO: switch out the magical 5 for function calculating the arry size
-	first_sets["stmt_list"] = (set<token> (first_stmt_list, first_stmt_list + 5));
-
-	token first_factor_tail[] = {t_mul, t_div};
-	first_sets["factor_tail"] = (set<token> (first_factor_tail, first_factor_tail + 2));
-
-	token first_term_tail[] = {t_add, t_sub};
-	first_sets["term_tail"] = (set<token> (first_factor_tail, first_factor_tail + 2));
 }
 
 void init_EPS(){
@@ -123,24 +93,6 @@ void add_op ();
 void mul_op ();
 void r_op ();
 
-bool isInSet(token t, set<token> given_set){
-	if(given_set.find(t) != given_set.end()) return true;
-	else return false;
-}
-
-//
-void check_for_error(string symbol, set<token> follow_set){
-	if( !isInSet(input_token, first_sets[symbol]) &&   
-			( !EPS["stmt_list"] or !isInSet(input_token, follow_sets[symbol]))) {
-		error();
-		do{
-			input_token = scan();
-		}while(!( isInSet(input_token, first_sets[symbol]) || 
-					isInSet(input_token, follow_sets[symbol]) ||
-					input_token == t_if || input_token == t_while || 
-					input_token == t_eof));
-	}
-}
 
 void program () {
 	try{
@@ -228,6 +180,8 @@ void stmt () {
 		}
 	}catch(const struct syntax_error &e){
 		cout << "ERROR: statement " << e.err_orig << endl;
+		//TODO:
+		//error recovery here
 	}
 }
 
