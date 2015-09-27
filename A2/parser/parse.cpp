@@ -19,13 +19,28 @@ const char* names[] = {
 	"while", "if", "end",  "read", "write", "id", "literal", "gets",
 	"add", "sub", "mul", "div", "lparen", "rparen", "eof"};
 
+map<string, set<token> > first_sets; 
 map<string, set<token> > follow_sets; 
+map<string, bool> EPS;
+
 
 void init_follow_sets(){
 	token follow_stmt_list[] = {t_eof, t_end};
 	follow_sets["stmt_list"] = (set<token> (follow_stmt_list, follow_stmt_list + 2));
 	cout << "DEBUG map init, size is: " << follow_sets.size() <<endl;
 	cout << "DEBUG map init, size of first key is: " << follow_sets["stmt_list"].size() <<endl;
+}
+
+void init_first_sets(){
+	token first_stmt_list[] = {t_id, t_read, t_write, t_if, t_while};
+	//TODO: switch out the magical 5 for function calculating the arry size
+	first_sets["stmt_list"] = (set<token> (first_stmt_list, first_stmt_list + 5));
+	cout << "DEBUG first map init, size is: " << first_sets.size() <<endl;
+	cout << "DEBUG first map init, size of first key is: " << first_sets["stmt_list"].size() <<endl;
+}
+
+void init_EPS(){
+	EPS["stmt_list"] = true;
 }
 
 
@@ -36,6 +51,7 @@ struct syntax_error{
 };
 
 void error () {
+	cout << "cnt input_token: " << names[input_token] << endl;
 	cout << "syntax error" << endl;
 	exit (1);
 }
@@ -70,6 +86,25 @@ void factor ();
 void add_op ();
 void mul_op ();
 void r_op ();
+
+bool isInSet(token t, set<token> given_set){
+	if(given_set.find(t) != given_set.end()) return true;
+	else return false;
+}
+
+//
+void check_for_error(string symbol, set<token> follow_set){
+	if( !isInSet(input_token, first_sets[symbol]) &&   
+			( !EPS["stmt_list"] or !isInSet(input_token, follow_sets[symbol]))) {
+		error();
+		do{
+			input_token = scan();
+		}while(!( isInSet(input_token, first_sets[symbol]) || 
+					isInSet(input_token, follow_sets[symbol]) ||
+					input_token == t_if || input_token == t_while || 
+					input_token == t_eof));
+	}
+}
 
 void program () {
 	switch (input_token) {
@@ -328,6 +363,8 @@ void r_op () {
 
 int main () {
 	init_follow_sets();
+	init_first_sets();
+	init_EPS();
 	input_token = scan ();
 	program ();
 	return 0;
