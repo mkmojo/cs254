@@ -23,6 +23,18 @@ map<string, set<token> > first_sets;
 map<string, set<token> > follow_sets; 
 map<string, bool> EPS;
 
+void check_for_error(string symbol, set<token> follow_set){
+	if( !isInSet(input_token, first_sets[symbol]) &&
+			( !EPS["stmt_list"] or !isInSet(input_token, follow_sets[symbol]))) {
+		error();
+		do{
+			input_token = scan();
+		}while(!( isInSet(input_token, first_sets[symbol]) ||
+					isInSet(input_token, follow_sets[symbol]) ||
+					input_token == t_if || input_token == t_while ||
+					input_token == t_eof));
+	}
+}
 
 void init_follow_sets(){
 	token follow_stmt_list[] = {t_eof, t_end};
