@@ -46,31 +46,55 @@ void init_EPS(){
 
 static token input_token;
 
+map<string, set<token> > first_sets; 
+map<string, set<token> > follow_sets; 
+map<string, bool> EPS;
+
 struct syntax_error{
+	string err_orig;
 	syntax_error(){}
+	syntax_error(string orig):err_orig(orig){}
 };
 
-void error () {
-	cout << "cnt input_token: " << names[input_token] << endl;
-	cout << "syntax error" << endl;
-	exit (1);
+
+void init_follow_sets(){
+	token follow_stmt_list[] = {t_eof, t_end};
+	follow_sets["stmt_list"] = (set<token> (follow_stmt_list, follow_stmt_list + 2));
+
+	token follow_factor_tail[] = {t_add, t_sub, t_rparen, t_id, t_read, t_write, t_eof,
+		t_if, t_while, t_end, t_equal, t_nequal, t_lt, t_gt, t_le, t_ge};
+	follow_sets["factor_tail"] = (set<token> (follow_factor_tail, follow_factor_tail + 16));
+
+	token follow_term_tail[] = {t_rparen, t_id, t_read, t_write, t_eof,
+		t_if, t_while, t_end, t_equal, t_nequal, t_lt, t_gt, t_le, t_ge};
+	follow_sets["term_tail"] = (set<token> (follow_term_tail, follow_term_tail + 14));
 }
 
+void init_first_sets(){
+	token first_stmt_list[] = {t_id, t_read, t_write, t_if, t_while};
+	//TODO: switch out the magical 5 for function calculating the arry size
+	first_sets["stmt_list"] = (set<token> (first_stmt_list, first_stmt_list + 5));
+
+	token first_factor_tail[] = {t_mul, t_div};
+	first_sets["factor_tail"] = (set<token> (first_factor_tail, first_factor_tail + 2));
+
+	token first_term_tail[] = {t_add, t_sub};
+	first_sets["term_tail"] = (set<token> (first_factor_tail, first_factor_tail + 2));
+}
+
+void init_EPS(){
+	EPS["stmt_list"] = true;
+}
 
 void match (token expected) {
-	try{
-		if (input_token == expected) {
-			cout << "matched " <<  names[input_token];
-			if (input_token == t_id || input_token == t_literal)
-				cout << ": " << token_image; 
-			cout << endl;
-			input_token = scan ();
-		}else{
-			throw syntax_error();
-		}
-	}
-	catch(const struct syntax_error){
-		error ();
+	if (input_token == expected) {
+		cout << "matched " <<  names[input_token];
+		if (input_token == t_id || input_token == t_literal)
+			cout << ": " << token_image; 
+		cout << endl;
+		input_token = scan ();
+	}else{
+		throw syntax_error("From match");
 	}
 }
 
@@ -107,16 +131,23 @@ void check_for_error(string symbol, set<token> follow_set){
 }
 
 void program () {
-	switch (input_token) {
-		case t_id:
-		case t_read:
-		case t_write:
-		case t_eof:
-			cout << "predict program --> stmt_list eof" << endl;
-			stmt_list ();
-			match (t_eof);
-			break;
-		default: error ();
+	try{
+		switch (input_token) {
+			case t_id:
+			case t_read:
+			case t_write:
+			case t_eof:
+				cout << "predict program --> stmt_list eof" << endl;
+				stmt_list ();
+				match (t_eof);
+				break;
+			default: 
+				throw syntax_error("From program");
+		}
+	}
+	catch(...){
+		cout << "Found error at program" <<endl;
+
 	}
 }
 
@@ -135,79 +166,97 @@ void stmt_list () {
 		case t_end:
 			cout << "predict stmt_list --> epsilon" << endl;
 			break;          /*  epsilon production */
-		default: error ();
+		default: 
+			throw syntax_error("From stmt_list");
 	}
 }
 
 void stmt () {
-	switch (input_token) {
-		case t_id:
-			cout << "predict stmt --> id gets expr" << endl;
-			match (t_id);
-			match (t_gets);
-			expr ();
-			break;
-		case t_read:
-			cout << "predict stmt --> read id" << endl;
-			match (t_read);
-			match (t_id);
-			break;
-		case t_write:
-			cout << "predict stmt --> write expr" << endl;
-			match (t_write);
-			expr ();
-			break;
-		case t_if:
-			cout << "predict stmt --> if cond stmt_list end" << endl;
-			match (t_if);
-			cond ();
-			stmt_list ();
-			match (t_end);
-			break;
-		case t_while:
-			cout << "predict stmt --> while cond stmt_list end" << endl;
-			match (t_while);
-			cond ();
-			stmt_list ();
-			match (t_end);
-			break;
-		case t_lparen:
-		case t_literal:
-		case t_add:
-		case t_mul:
-		case t_eof:
-			cout << "predict stmt --> epsilon" << endl;
-			return;
-		default: error ();
+	try{
+		switch (input_token) {
+			case t_id:
+				cout << "predict stmt --> id gets expr" << endl;
+				match (t_id);
+				match (t_gets);
+				expr ();
+				break;
+			case t_read:
+				cout << "predict stmt --> read id" << endl;
+				match (t_read);
+				match (t_id);
+				break;
+			case t_write:
+				cout << "predict stmt --> write expr" << endl;
+				match (t_write);
+				expr ();
+				break;
+			case t_if:
+				cout << "predict stmt --> if cond stmt_list end" << endl;
+				match (t_if);
+				cond ();
+				stmt_list ();
+				match (t_end);
+				break;
+			case t_while:
+				cout << "predict stmt --> while cond stmt_list end" << endl;
+				match (t_while);
+				cond ();
+				stmt_list ();
+				match (t_end);
+				break;
+			case t_lparen:
+			case t_literal:
+			case t_add:
+			case t_mul:
+			case t_eof:
+				cout << "predict stmt --> epsilon" << endl;
+				return;
+			default:
+				throw syntax_error();
+		}
+	}catch(const struct syntax_error &e){
+		cout << "ERROR: statement " << e.err_orig << endl;
 	}
 }
 
 // non-terminal for condition
 // this is one of the tricky part
 void cond () {
-	switch (input_token){
-		case t_id:
-		case t_literal:
-		case t_lparen:
-			cout << "predict cond --> expr r_op expr" << endl;
-			expr ();
-			r_op ();
-			expr ();
-			break;
-		default: error();
+	try{
+		switch (input_token){
+			case t_id:
+			case t_literal:
+			case t_lparen:
+				cout << "predict cond --> expr r_op expr" << endl;
+				expr ();
+				r_op ();
+				expr ();
+				break;
+			default:
+				throw ("From cond"); 
+		}
+	}
+	catch(const struct syntax_error &e){
+		cout << "ERROR: condition " << e.err_orig << endl;
 	}
 }
 
 void expr () {
-	switch (input_token) {
-		case t_id:
-		case t_literal:
-		case t_lparen:
-			cout << "predict expr --> term term_tail" << endl;
-			term ();
-			term_tail ();
-			break;
-		default: error ();
+	try{
+		switch (input_token) {
+			case t_id:
+			case t_literal:
+			case t_lparen:
+				cout << "predict expr --> term term_tail" << endl;
+				term ();
+				term_tail ();
+				break;
+			default: 
+				throw syntax_error ("From expr");
+		}
+	}
+	catch (const struct syntax_error &e){
+		cout << "ERROR: expression " << e.err_orig << endl;
 	}
 }
 
@@ -236,7 +285,8 @@ void term_tail () {
 		case t_end:
 			cout << "predict term_tail --> epsilon" << endl;
 			break;          /*  epsilon production */
-		default: error ();
+		default: 
+			throw syntax_error ("From term_tail");
 	}
 }
 
@@ -249,7 +299,8 @@ void term () {
 			factor ();
 			factor_tail ();
 			break;
-		default: error ();
+		default: 
+			throw syntax_error ("From term");
 	}
 }
 
@@ -280,7 +331,8 @@ void factor_tail () {
 		case t_end:
 			cout << "predict factor_tail --> epsilon" << endl;
 			break;          /*  epsilon production */
-		default: error ();
+		default: 
+			throw ("From factor tail");
 	}
 }
 
@@ -300,7 +352,8 @@ void factor () {
 			expr ();
 			match (t_rparen);
 			break;
-		default: error ();
+		default: 
+			throw ("From factor");
 	}
 }
 
@@ -314,7 +367,8 @@ void add_op () {
 			cout << "predict add_op --> sub" << endl;
 			match (t_sub);
 			break;
-		default: error ();
+		default: 
+			throw ("From add_op");
 	}
 }
 
@@ -328,7 +382,8 @@ void mul_op () {
 			cout << "predict mul_op --> div" << endl;
 			match (t_div);
 			break;
-		default: error ();
+		default: 
+			throw ("From mul_op");
 	}
 }
 
@@ -357,7 +412,8 @@ void r_op () {
 		case t_ge:
 			cout << "predict r_op --> greater_equal" << endl;
 			break;
-		default: error ();
+		default: 
+			throw ("From r_op");
 	}
 }
 
