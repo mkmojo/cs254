@@ -7,6 +7,8 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "iostream"
+#include "map"
+#include "set"
 
 #include "scan.h"
 
@@ -16,6 +18,16 @@ const char* names[] = {
 	"equal", "n_equal", "less_than", "greater_than", "less_equal", "greater_equal", 
 	"while", "if", "end",  "read", "write", "id", "literal", "gets",
 	"add", "sub", "mul", "div", "lparen", "rparen", "eof"};
+
+map<string, set<token> > follow_sets; 
+
+void init_follow_sets(){
+	token follow_stmt_list[] = {t_eof, t_end};
+	follow_sets["stmt_list"] = (set<token> (follow_stmt_list, follow_stmt_list + 2));
+	cout << "DEBUG map init, size is: " << follow_sets.size() <<endl;
+	cout << "DEBUG map init, size of first key is: " << follow_sets["stmt_list"].size() <<endl;
+}
+
 
 static token input_token;
 
@@ -315,6 +327,7 @@ void r_op () {
 }
 
 int main () {
+	init_follow_sets();
 	input_token = scan ();
 	program ();
 	return 0;
