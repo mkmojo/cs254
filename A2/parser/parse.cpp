@@ -50,9 +50,10 @@ void init_follow_sets(){
     follow_sets["cond"] = (set<token> (follow_cond, follow_cond + 6));
 }
 
+//TODO:
+//code up aux function make_set
 void init_first_sets(){
     token first_stmt_list[] = {t_id, t_read, t_write, t_if, t_while};
-    //TODO: switch out the magical 5 for function calculating the arry size
     first_sets["stmt_list"] = (set<token> (first_stmt_list, first_stmt_list + 5));
 
     token first_stmt[] = {t_id, t_read, t_write, t_if, t_while};
@@ -83,9 +84,9 @@ void match (token expected) {
 
 void program ();
 void stmt_list ();
-void stmt ();
-void cond ();
-void expr ();
+void stmt (const set<token>&);
+void cond (const set<token>&);
+void expr (const set<token>&);
 void term_tail ();
 void term ();
 void factor_tail ();
@@ -126,7 +127,7 @@ void stmt_list () {
         case t_if:
         case t_while:
             cout << "predict stmt_list --> stmt stmt_list" << endl;
-            stmt ();
+            stmt ( follow_sets["stmt"] );
             stmt_list ();
             break;
         case t_eof:
@@ -138,14 +139,14 @@ void stmt_list () {
     }
 }
 
-void stmt () {
+void stmt (const set<token>& follow_set) {
     try{
         switch (input_token) {
             case t_id:
                 cout << "predict stmt --> id gets expr" << endl;
                 match (t_id);
                 match (t_gets);
-                expr ();
+                expr (follow_set);
                 break;
             case t_read:
                 cout << "predict stmt --> read id" << endl;
@@ -155,19 +156,19 @@ void stmt () {
             case t_write:
                 cout << "predict stmt --> write expr" << endl;
                 match (t_write);
-                expr ();
+                expr (follow_set);
                 break;
             case t_if:
                 cout << "predict stmt --> if cond stmt_list end" << endl;
                 match (t_if);
-                cond ();
+                cond ( follow_sets["cond"] );
                 stmt_list ();
                 match (t_end);
                 break;
             case t_while:
                 cout << "predict stmt --> while cond stmt_list end" << endl;
                 match (t_while);
-                cond ();
+                cond ( follow_sets["cond"]);
                 stmt_list ();
                 match (t_end);
                 break;
@@ -181,12 +182,12 @@ void stmt () {
             default:
                 throw syntax_error();
         }
-    }catch(const struct syntax_error &e){
+    } catch (const struct syntax_error &e) {
         cout << "ERROR: statement " << e.err_orig << endl;
         do{
             if (isInSet(input_token, first_sets["stmt"])){
                 //TODO add local follow set
-                stmt();
+                stmt (follow_set);
                 return;
             }else if(isInSet(input_token, follow_sets["stmt"])){
                 return;
@@ -197,16 +198,16 @@ void stmt () {
 
 // non-terminal for condition
 // this is one of the tricky part
-void cond () {
+void cond (const set<token>& follow_set) {
     try{
         switch (input_token){
             case t_id:
             case t_literal:
             case t_lparen:
                 cout << "predict cond --> expr r_op expr" << endl;
-                expr ();
+                expr (follow_set);
                 r_op ();
-                expr ();
+                expr (follow_set);
                 break;
             default:
                 throw syntax_error("From cond"); 
@@ -216,7 +217,7 @@ void cond () {
         cout << "Try recover from condition " << e.err_orig << endl;
         do{
             if (isInSet(input_token, first_sets["cond"])){
-                cond();
+                cond (follow_set);
                 return;
             }else if(isInSet(input_token, follow_sets["cond"])){
                 return;
@@ -225,7 +226,7 @@ void cond () {
     }
 }
 
-void expr () {
+void expr (const set<token>& follow_set) {
     try{
         switch (input_token) {
             case t_id:
@@ -243,7 +244,7 @@ void expr () {
         cout << "ERROR: expr " << e.err_orig << endl;
         do{
             if (isInSet(input_token, first_sets["expr"])){
-                expr();
+                expr (follow_set);
                 return;
             }else if(isInSet(input_token, follow_sets["expr"])){
                 return;
@@ -341,7 +342,7 @@ void factor () {
         case t_lparen:
             cout << "predict factor --> lparen expr rparen" << endl;
             match (t_lparen);
-            expr ();
+            expr ( set<token>() );
             match (t_rparen);
             break;
         default: 
