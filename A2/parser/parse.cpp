@@ -27,16 +27,16 @@ static token input_token;
 
 struct syntax_error{
     string err_orig;
-    syntax_error(){}
+    syntax_error (){}
     syntax_error(string orig):err_orig(orig){}
 };
 
 bool isInSet(token t, set<token> given_set){
-    if(given_set.find(t) != given_set.end()) return true;
+    if(given_set.find(t) != given_set.end ()) return true;
     else return false;
 }
 
-void init_follow_sets(){
+void init_follow_sets (){
     token follow_stmt_list[] = {t_eof, t_end};
     follow_sets["stmt_list"] = (set<token> (follow_stmt_list, follow_stmt_list + 2));
 
@@ -52,7 +52,7 @@ void init_follow_sets(){
 
 //TODO:
 //code up aux function make_set
-void init_first_sets(){
+void init_first_sets (){
     token first_stmt_list[] = {t_id, t_read, t_write, t_if, t_while};
     first_sets["stmt_list"] = (set<token> (first_stmt_list, first_stmt_list + 5));
 
@@ -66,7 +66,7 @@ void init_first_sets(){
     first_sets["cond"] = (set<token> (first_cond, first_cond + 3));
 }
 
-void init_EPS(){
+void init_EPS (){
     EPS["stmt_list"] = true;
 }
 
@@ -180,10 +180,10 @@ void stmt (const set<token>& follow_set) {
                 cout << "predict stmt --> epsilon" << endl;
                 return;
             default:
-                throw syntax_error();
+                throw syntax_error ();
         }
     } catch (const struct syntax_error &e) {
-        cout << "ERROR: statement " << e.err_orig << endl;
+        cout << "Recover statement: " << e.err_orig << endl;
         do{
             if (isInSet(input_token, first_sets["stmt"])){
                 //TODO add local follow set
@@ -192,7 +192,7 @@ void stmt (const set<token>& follow_set) {
             }else if(isInSet(input_token, follow_sets["stmt"])){
                 return;
             }
-        }while(input_token = scan());
+        }while(input_token = scan ());
     }
 }
 
@@ -214,7 +214,7 @@ void cond (const set<token>& follow_set) {
         }
     }
     catch(const struct syntax_error &e){
-        cout << "Try recover from condition " << e.err_orig << endl;
+        cout << "Reocver cond: " << e.err_orig << endl;
         do{
             if (isInSet(input_token, first_sets["cond"])){
                 cond (follow_set);
@@ -222,7 +222,7 @@ void cond (const set<token>& follow_set) {
             }else if(isInSet(input_token, follow_sets["cond"])){
                 return;
             }
-        }while(input_token = scan());
+        }while(input_token = scan ());
     }
 }
 
@@ -241,7 +241,7 @@ void expr (const set<token>& follow_set) {
         }
     }
     catch(const struct syntax_error &e){
-        cout << "ERROR: expr " << e.err_orig << endl;
+        cout << "Recover expr: " << e.err_orig << endl;
         do{
             if (isInSet(input_token, first_sets["expr"])){
                 expr (follow_set);
@@ -249,7 +249,7 @@ void expr (const set<token>& follow_set) {
             }else if(isInSet(input_token, follow_sets["expr"])){
                 return;
             }
-        }while(input_token = scan());
+        }while(input_token = scan ());
     }
 }
 
@@ -342,7 +342,7 @@ void factor () {
         case t_lparen:
             cout << "predict factor --> lparen expr rparen" << endl;
             match (t_lparen);
-            expr ( set<token>() );
+            expr ( set<token> () );
             match (t_rparen);
             break;
         default: 
