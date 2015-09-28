@@ -36,25 +36,12 @@ bool isInSet(token t, set<token> given_set){
     else return false;
 }
 
-void check_for_error(string symbol, set<token> follow_set){
-    if( !isInSet(input_token, first_sets[symbol]) &&
-            ( !EPS["stmt_list"] or !isInSet(input_token, follow_sets[symbol]))) {
-        throw syntax_error("From check_for_error");
-        do{
-            input_token = scan();
-        }while(!( isInSet(input_token, first_sets[symbol]) ||
-                    isInSet(input_token, follow_sets[symbol]) ||
-                    input_token == t_if || input_token == t_while ||
-                    input_token == t_eof));
-    }
-}
-
 void init_follow_sets(){
     token follow_stmt_list[] = {t_eof, t_end};
     follow_sets["stmt_list"] = (set<token> (follow_stmt_list, follow_stmt_list + 2));
 
     token follow_stmt[] = {t_id, t_read, t_write, t_if, t_while, t_eof };
-    follow_sets["stmt"] = (set<token> (follow_stmt, follow_stmt + 6));
+    follow_sets["stmt"] = (set<token> (follow_stmt, follow_stmt + sizeof(follow_stmt)/sizeof(token)));
 
     token follow_expr[] = {t_equal, t_nequal, t_lt, t_gt, t_le, t_ge, t_rparen};
     follow_sets["expr"] = (set<token> (follow_expr, follow_expr + 7));
@@ -422,10 +409,15 @@ void r_op () {
     }
 }
 
+//Initialize aux sets for non-terminals
+void init (){
+    init_follow_sets ();
+    init_first_sets ();
+    init_EPS ();
+}
+
 int main () {
-    init_follow_sets();
-    init_first_sets();
-    init_EPS();
+    init ();
     input_token = scan ();
     program ();
     return 0;
