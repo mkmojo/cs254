@@ -1,6 +1,6 @@
 open String;;
 
-let rec dfs level total ans = match (level,total) with
+let rec dfs level total ans = match (level, total) with
      (*type error at this arm of recurssion*)
      |(_, 0) -> (print_newline (print_string (  "(" ^ ans^(String.make level ')') ^")" )) )
      |(0, _) -> ( dfs (level+1) (total-1) ( ans^"(" ) )
