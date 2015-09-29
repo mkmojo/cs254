@@ -39,24 +39,45 @@ bool isInSet(token t, set<token> given_set){
     else return false;
 }
 
-void init_follow_sets (){
-    follow_sets["stmt_list"] = set<token> ({t_eof, t_end});
-    follow_sets["stmt"] = set<token> ({t_id, t_read, t_write, t_if, t_while, t_eof });
-    follow_sets["expr"] = set<token> ({t_equal, t_nequal, t_lt, t_gt, t_le, t_ge, t_rparen});
-    follow_sets["cond"] = set<token> ({t_id, t_read, t_write, t_if, t_while, t_end});
+void print_token_set(const set<token> &ts){
+    set<token>::iterator it;
+    cout << "[ ";
+    for(it = ts.begin(); it != ts.end(); it++){
+        cout << names[*it] << " ";
+    }
+    cout << " ]";
+    cout << endl;
 }
 
-//TODO:
-//code up aux function make_set
 void init_first_sets (){
     first_sets["stmt_list"] = set<token>({t_id, t_read, t_write, t_if, t_while});
     first_sets["stmt"] = set<token>({t_id, t_read, t_write, t_if, t_while});
     first_sets["expr"] = set<token>({t_id, t_lparen, t_literal});
     first_sets["cond"] = set<token>({t_id, t_lparen, t_literal});
+    first_sets["factor_tail"] = set<token>({t_mul, t_div });
+    first_sets["factor"] = set<token>({t_lparen, t_id, t_literal});
+    first_sets["term_tail"] = set<token>({t_add, t_sub});
+    first_sets["term"] = set<token>({t_lparen, t_id, t_literal});
 }
+
+void init_follow_sets (){
+    follow_sets["stmt_list"] = set<token> ({t_eof, t_end});
+    follow_sets["stmt"] = set<token> ({t_id, t_read, t_write, t_if, t_while, t_eof });
+    follow_sets["expr"] = set<token> ({t_equal, t_nequal, t_lt, t_gt, t_le, t_ge, t_rparen});
+    follow_sets["cond"] = set<token> ({t_id, t_read, t_write, t_if, t_while, t_end});
+    follow_sets["factor_tail"] = set<token> ( {t_add, t_sub, t_rparen, t_id, t_read, t_write, t_eof,
+             t_if, t_while, t_equal, t_nequal, t_lt, t_gt, t_le, t_ge, t_end});
+    //what is the follow set of term_tail and term? 
+    follow_sets["term_tail"] = set<token> ( {t_mul, t_div, t_rparen, t_id, t_read, t_write, t_eof,
+             t_if, t_while, t_equal, t_nequal, t_lt, t_gt, t_le, t_ge, t_end});
+    
+}
+
 
 void init_EPS (){
     EPS["stmt_list"] = true;
+    EPS["factor_tail"] = true;
+    EPS["term_tail"] = true;
 }
 
 void match (token expected) {
@@ -67,8 +88,14 @@ void match (token expected) {
         cout << endl;
         input_token = scan ();
     }else{
-        input_token = expected;
         throw syntax_error("From match ", expected);
+    }
+}
+
+void check_for_error(string symbol, set<token> follow_set){
+    if (!(isInSet(input_token, first_sets[symbol]) || 
+            (EPS[symbol] && isInSet(input_token, follow_set)))){
+        throw syntax_error(" EXCEPTION raised by check_for_error in " + symbol );
     }
 }
 
@@ -104,7 +131,7 @@ void program () {
     }
     catch(const struct syntax_error &e){
         cout << "Syntax error ";
-        cout <<  e.err_orig << endl;
+        cout <<  e.err_orig << ",  cnt_input_token is "<< names[input_token] << endl;
     }
 }
 
@@ -116,26 +143,27 @@ void stmt_list (const set<token> &follow_set) {
         case t_if:
         case t_while:
             cout << "predict stmt_list --> stmt stmt_list" << endl;
-            stmt ( follow_sets["stmt"] );
-            stmt_list (follow_set);
+            stmt (follow_sets["stmt"]);
+            stmt_list (follow_sets["stmt_list"]);
             break;
         case t_eof:
         case t_end:
             cout << "predict stmt_list --> epsilon" << endl;
             break;          /*  epsilon production */
         default: 
-            throw syntax_error("From stmt_list");
+            throw syntax_error("From stmt_list", input_token);
     }
 }
 
 void stmt (const set<token>& follow_set) {
     try{
+        check_for_error("stmt", follow_set);
         switch (input_token) {
             case t_id:
                 cout << "predict stmt --> id gets expr" << endl;
                 match (t_id);
                 match (t_gets);
-                expr (follow_set);
+                expr (follow_sets["stmt"]);
                 break;
             case t_read:
                 cout << "predict stmt --> read id" << endl;
@@ -145,20 +173,20 @@ void stmt (const set<token>& follow_set) {
             case t_write:
                 cout << "predict stmt --> write expr" << endl;
                 match (t_write);
-                expr (follow_set);
+                expr (follow_sets["stmt"]);
                 break;
             case t_if:
                 cout << "predict stmt --> if cond stmt_list end" << endl;
                 match (t_if);
-                cond ( follow_sets["cond"] );
-                stmt_list (follow_set);
+                cond (follow_sets["cond"]);
+                stmt_list ( set<token> ({t_end}) );
                 match (t_end);
                 break;
             case t_while:
                 cout << "predict stmt --> while cond stmt_list end" << endl;
                 match (t_while);
-                cond ( follow_sets["cond"]);
-                stmt_list (follow_set);
+                cond (follow_sets["cond"]);
+                stmt_list ( set<token> ({t_end}) );
                 match (t_end);
                 break;
             case t_lparen:
@@ -172,7 +200,7 @@ void stmt (const set<token>& follow_set) {
                 throw syntax_error ();
         }
     } catch (const struct syntax_error &e) {
-        cout << "Recover statement: " << e.err_orig << endl;
+        cout << "stmt handles: " << e.err_orig << endl;
         do{
             if (isInSet(input_token, first_sets["stmt"])){
                 //TODO add local follow set
@@ -217,6 +245,7 @@ void cond (const set<token>& follow_set) {
 
 void expr (const set<token> &follow_set) {
     try{
+        print_token_set(follow_set);
         switch (input_token) {
             case t_id:
             case t_literal:
@@ -230,12 +259,14 @@ void expr (const set<token> &follow_set) {
         }
     }
     catch(const struct syntax_error &e){
-        cout << "Recover expr: " << e.err_orig << endl;
+        cout << "expr handles : " << e.err_orig << endl;
         do{
             if (isInSet(input_token, first_sets["expr"])){
+                cout << names[input_token] << " is in FIRST(expr) " << endl;
                 expr (follow_set);
                 return;
-            }else if(isInSet(input_token, follow_sets["expr"])){
+            }else if(isInSet(input_token, follow_set)){
+                cout << names[input_token] << " is in context FOLLOW(expr)" << endl;
                 return;
             }
         }while(input_token = scan ());
@@ -248,8 +279,8 @@ void term_tail (const set<token> &follow_set) {
         case t_sub:
             cout << "predict term_tail --> add_op term term_tail" << endl;
             add_op ();
-            term (follow_set);
-            term_tail (follow_set);
+            term (follow_sets["term"]);
+            term_tail (follow_sets["term_tail"]);
             break;
         case t_rparen:
         case t_id:
@@ -287,34 +318,53 @@ void term (const set<token> &follow_set) {
 }
 
 void factor_tail (const set<token> &follow_set) {
-    switch (input_token) {
-        case t_mul:
-        case t_div:
-            cout << "predict factor_tail --> mul_op factor factor_tail" << endl;
-            mul_op ();
-            factor (follow_set);
-            factor_tail (follow_set);
-            break;
-        case t_add:
-        case t_sub:
-        case t_rparen:
-        case t_id:
-        case t_read:
-        case t_write:
-        case t_eof:
-        case t_if:
-        case t_while:
-        case t_equal:
-        case t_nequal:
-        case t_lt:
-        case t_gt:
-        case t_le:
-        case t_ge:
-        case t_end:
-            cout << "predict factor_tail --> epsilon" << endl;
-            break;          /*  epsilon production */
-        default: 
-            throw syntax_error("From factor tail");
+    try{
+        print_token_set(follow_set);
+        check_for_error("factor_tail", follow_set);
+        switch (input_token) {
+            case t_mul:
+            case t_div:
+                cout << "predict factor_tail --> mul_op factor factor_tail" << endl;
+                mul_op ();
+                factor (follow_set);
+                factor_tail (follow_set);
+                break;
+            case t_add:
+            case t_sub:
+            case t_rparen:
+            case t_id:
+            case t_read:
+            case t_write:
+            case t_eof:
+            case t_if:
+            case t_while:
+            case t_equal:
+            case t_nequal:
+            case t_lt:
+            case t_gt:
+            case t_le:
+            case t_ge:
+            case t_end:
+                cout << "predict factor_tail --> epsilon" << endl;
+                break;          /*  epsilon production */
+            default: 
+                throw syntax_error("From factor tail");
+        }
+    }catch(const struct syntax_error& e){
+        cout << "factor_tail handles : " << e.err_orig << endl;
+        do{
+            if (isInSet(input_token, first_sets["factor_tail"])){
+                cout << "DEBUG "<<names[input_token] << " is in FIRST(factor_tail), try factor_tail again" 
+                    << endl;
+                factor_tail (follow_set);
+                return;
+            }else if(isInSet(input_token, follow_set)){
+                cout << "DEBUG " << names[input_token] << " is in context FOLLOW(factor_tail), return" << endl;
+                return;
+            }
+            cout << "DEBUG " << "delete cnt token " << names[input_token] <<endl;
+        }while(input_token = scan ());
+
     }
 }
 

@@ -4,7 +4,7 @@
 # Note that rule for goal (parse) must be the first one in this file.
 
 CXX=g++
-CXXFLAGS= -std=c++11 -g -Wall
+CXXFLAGS= -std=c++11 -g 
 BIN=parse
 
 parse: parse.o scan.o
