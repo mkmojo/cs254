@@ -9,6 +9,7 @@
 #include "iostream"
 #include "map"
 #include "set"
+#include "string"
 
 #include "scan.h"
 
@@ -37,33 +38,19 @@ bool isInSet(token t, set<token> given_set){
 }
 
 void init_follow_sets (){
-    token follow_stmt_list[] = {t_eof, t_end};
-    follow_sets["stmt_list"] = (set<token> (follow_stmt_list, follow_stmt_list + 2));
-
-    token follow_stmt[] = {t_id, t_read, t_write, t_if, t_while, t_eof };
-    follow_sets["stmt"] = (set<token> (follow_stmt, follow_stmt + sizeof(follow_stmt)/sizeof(token)));
-
-    token follow_expr[] = {t_equal, t_nequal, t_lt, t_gt, t_le, t_ge, t_rparen};
-    follow_sets["expr"] = (set<token> (follow_expr, follow_expr + 7));
-
-    token follow_cond[] = {t_id, t_read, t_write, t_if, t_while, t_end};
-    follow_sets["cond"] = (set<token> (follow_cond, follow_cond + 6));
+    follow_sets["stmt_list"] = set<token> ({t_eof, t_end});
+    follow_sets["stmt"] = set<token> ({t_id, t_read, t_write, t_if, t_while, t_eof });
+    follow_sets["expr"] = set<token> ({t_equal, t_nequal, t_lt, t_gt, t_le, t_ge, t_rparen});
+    follow_sets["cond"] = set<token> ({t_id, t_read, t_write, t_if, t_while, t_end});
 }
 
 //TODO:
 //code up aux function make_set
 void init_first_sets (){
-    token first_stmt_list[] = {t_id, t_read, t_write, t_if, t_while};
-    first_sets["stmt_list"] = (set<token> (first_stmt_list, first_stmt_list + 5));
-
-    token first_stmt[] = {t_id, t_read, t_write, t_if, t_while};
-    first_sets["stmt"] = (set<token> (first_stmt, first_stmt + 5));
-
-    token first_expr[] = {t_id, t_lparen, t_literal};
-    first_sets["expr"] = (set<token> (first_expr, first_expr + 3));
-
-    token first_cond[] = {t_id, t_lparen, t_literal};
-    first_sets["cond"] = (set<token> (first_cond, first_cond + 3));
+    first_sets["stmt_list"] = set<token>({t_id, t_read, t_write, t_if, t_while});
+    first_sets["stmt"] = set<token>({t_id, t_read, t_write, t_if, t_while});
+    first_sets["expr"] = set<token>({t_id, t_lparen, t_literal});
+    first_sets["cond"] = set<token>({t_id, t_lparen, t_literal});
 }
 
 void init_EPS (){
@@ -94,7 +81,6 @@ void factor (const set<token>&);
 void add_op ();
 void mul_op ();
 void r_op ();
-
 
 void program () {
     try{
@@ -330,6 +316,7 @@ void factor_tail (const set<token> &follow_set) {
 }
 
 void factor (const set<token> &follow_set) {
+    set<token> lparen_follow_set = {t_rparen};
     switch (input_token) {
         case t_id :
             cout << "predict factor --> id" << endl;
@@ -342,7 +329,7 @@ void factor (const set<token> &follow_set) {
         case t_lparen:
             cout << "predict factor --> lparen expr rparen" << endl;
             match (t_lparen);
-            expr (follow_set);
+            expr (set<token> ( {t_rparen} ) );
             match (t_rparen);
             break;
         default: 
