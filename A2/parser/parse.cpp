@@ -28,8 +28,10 @@ static token input_token;
 
 struct syntax_error{
     string err_orig;
+    token expected;
     syntax_error (){}
     syntax_error(string orig):err_orig(orig){}
+    syntax_error(string orig, token exp):err_orig(orig), expected(exp){}
 };
 
 bool isInSet(token t, set<token> given_set){
@@ -65,7 +67,8 @@ void match (token expected) {
         cout << endl;
         input_token = scan ();
     }else{
-        throw syntax_error("From match");
+        input_token = expected;
+        throw syntax_error("From match ", expected);
     }
 }
 
