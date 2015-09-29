@@ -83,14 +83,14 @@ void match (token expected) {
 }
 
 void program ();
-void stmt_list ();
+void stmt_list (const set<token>&);
 void stmt (const set<token>&);
 void cond (const set<token>&);
 void expr (const set<token>&);
-void term_tail ();
-void term ();
-void factor_tail ();
-void factor ();
+void term_tail (const set<token>&);
+void term (const set<token>&);
+void factor_tail (const set<token>&);
+void factor (const set<token>&);
 void add_op ();
 void mul_op ();
 void r_op ();
@@ -106,7 +106,7 @@ void program () {
             case t_while:
             case t_eof:
                 cout << "predict program --> stmt_list eof" << endl;
-                stmt_list ();
+                stmt_list (follow_sets["stmt_list"]);
                 match (t_eof);
                 break;
             default: 
@@ -119,7 +119,7 @@ void program () {
     }
 }
 
-void stmt_list () {
+void stmt_list (const set<token> &follow_set) {
     switch (input_token) {
         case t_id:
         case t_read:
@@ -128,7 +128,7 @@ void stmt_list () {
         case t_while:
             cout << "predict stmt_list --> stmt stmt_list" << endl;
             stmt ( follow_sets["stmt"] );
-            stmt_list ();
+            stmt_list (follow_set);
             break;
         case t_eof:
         case t_end:
@@ -162,14 +162,14 @@ void stmt (const set<token>& follow_set) {
                 cout << "predict stmt --> if cond stmt_list end" << endl;
                 match (t_if);
                 cond ( follow_sets["cond"] );
-                stmt_list ();
+                stmt_list (follow_set);
                 match (t_end);
                 break;
             case t_while:
                 cout << "predict stmt --> while cond stmt_list end" << endl;
                 match (t_while);
                 cond ( follow_sets["cond"]);
-                stmt_list ();
+                stmt_list (follow_set);
                 match (t_end);
                 break;
             case t_lparen:
@@ -226,15 +226,15 @@ void cond (const set<token>& follow_set) {
     }
 }
 
-void expr (const set<token>& follow_set) {
+void expr (const set<token> &follow_set) {
     try{
         switch (input_token) {
             case t_id:
             case t_literal:
             case t_lparen:
                 cout << "predict expr --> term term_tail" << endl;
-                term ();
-                term_tail ();
+                term (follow_set);
+                term_tail (follow_set);
                 break;
             default: 
                 throw syntax_error ("From expr");
@@ -253,14 +253,14 @@ void expr (const set<token>& follow_set) {
     }
 }
 
-void term_tail () {
+void term_tail (const set<token> &follow_set) {
     switch (input_token) {
         case t_add:
         case t_sub:
             cout << "predict term_tail --> add_op term term_tail" << endl;
             add_op ();
-            term ();
-            term_tail ();
+            term (follow_set);
+            term_tail (follow_set);
             break;
         case t_rparen:
         case t_id:
@@ -283,28 +283,28 @@ void term_tail () {
     }
 }
 
-void term () {
+void term (const set<token> &follow_set) {
     switch (input_token) {
         case t_id:
         case t_literal:
         case t_lparen:
             cout << "predict term --> factor factor_tail" << endl;
-            factor ();
-            factor_tail ();
+            factor (follow_set);
+            factor_tail (follow_set);
             break;
         default: 
             throw syntax_error ("From term");
     }
 }
 
-void factor_tail () {
+void factor_tail (const set<token> &follow_set) {
     switch (input_token) {
         case t_mul:
         case t_div:
             cout << "predict factor_tail --> mul_op factor factor_tail" << endl;
             mul_op ();
-            factor ();
-            factor_tail ();
+            factor (follow_set);
+            factor_tail (follow_set);
             break;
         case t_add:
         case t_sub:
@@ -329,7 +329,7 @@ void factor_tail () {
     }
 }
 
-void factor () {
+void factor (const set<token> &follow_set) {
     switch (input_token) {
         case t_id :
             cout << "predict factor --> id" << endl;
@@ -342,7 +342,7 @@ void factor () {
         case t_lparen:
             cout << "predict factor --> lparen expr rparen" << endl;
             match (t_lparen);
-            expr ( set<token> () );
+            expr (follow_set);
             match (t_rparen);
             break;
         default: 
