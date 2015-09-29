@@ -3,8 +3,12 @@
 
 # Note that rule for goal (parse) must be the first one in this file.
 
+CXX=g++
+CXXFLAGS= -std=c++11 -g -Wall
+BIN=parse
+
 parse: parse.o scan.o
-	g++ -o parse parse.o scan.o -g -std=c++11
+	$(CXX)  -o $(BIN) parse.o scan.o 
 
 clean:
 	rm -f scan.o parse.o parse
