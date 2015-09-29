@@ -65,9 +65,10 @@ void init_follow_sets (){
     follow_sets["stmt"] = set<token> ({t_id, t_read, t_write, t_if, t_while, t_eof });
     follow_sets["expr"] = set<token> ({t_equal, t_nequal, t_lt, t_gt, t_le, t_ge, t_rparen});
     follow_sets["cond"] = set<token> ({t_id, t_read, t_write, t_if, t_while, t_end});
+    follow_sets["factor"] = set<token> ({t_mul, t_div, t_eof});
     follow_sets["factor_tail"] = set<token> ( {t_add, t_sub, t_rparen, t_id, t_read, t_write, t_eof,
              t_if, t_while, t_equal, t_nequal, t_lt, t_gt, t_le, t_ge, t_end});
-    //what is the follow set of term_tail and term? 
+    follow_sets["term"] = set<token> ({t_add, t_sub, t_eof});
     follow_sets["term_tail"] = set<token> ( {t_mul, t_div, t_rparen, t_id, t_read, t_write, t_eof,
              t_if, t_while, t_equal, t_nequal, t_lt, t_gt, t_le, t_ge, t_end});
     
@@ -136,6 +137,7 @@ void program () {
 }
 
 void stmt_list (const set<token> &follow_set) {
+    print_token_set(follow_set);
     switch (input_token) {
         case t_id:
         case t_read:
@@ -163,7 +165,7 @@ void stmt (const set<token>& follow_set) {
                 cout << "predict stmt --> id gets expr" << endl;
                 match (t_id);
                 match (t_gets);
-                expr (follow_sets["stmt"]);
+                expr (follow_set);
                 break;
             case t_read:
                 cout << "predict stmt --> read id" << endl;
@@ -173,20 +175,20 @@ void stmt (const set<token>& follow_set) {
             case t_write:
                 cout << "predict stmt --> write expr" << endl;
                 match (t_write);
-                expr (follow_sets["stmt"]);
+                expr (follow_set);
                 break;
             case t_if:
                 cout << "predict stmt --> if cond stmt_list end" << endl;
                 match (t_if);
-                cond (follow_sets["cond"]);
-                stmt_list ( set<token> ({t_end}) );
+                cond (first_sets["stmt_list"]);
+                stmt_list ( follow_set );
                 match (t_end);
                 break;
             case t_while:
                 cout << "predict stmt --> while cond stmt_list end" << endl;
                 match (t_while);
-                cond (follow_sets["cond"]);
-                stmt_list ( set<token> ({t_end}) );
+                cond (first_sets["stmt_list"]);
+                stmt_list (follow_set);
                 match (t_end);
                 break;
             case t_lparen:
@@ -209,6 +211,11 @@ void stmt (const set<token>& follow_set) {
             }else if(isInSet(input_token, follow_sets["stmt"])){
                 return;
             }
+            cout << "DEBUG " << "delete cnt token: " << names[input_token] ;
+            if(input_token == t_id || input_token == t_literal)
+                cout << " "<<token_image <<endl;
+            else cout <<endl;
+
         }while(input_token = scan ());
     }
 }
@@ -217,6 +224,7 @@ void stmt (const set<token>& follow_set) {
 // this is one of the tricky part
 void cond (const set<token>& follow_set) {
     try{
+        print_token_set(follow_set);
         switch (input_token){
             case t_id:
             case t_literal:
@@ -239,6 +247,11 @@ void cond (const set<token>& follow_set) {
             }else if(isInSet(input_token, follow_sets["cond"])){
                 return;
             }
+            cout << "DEBUG " << "delete cnt token: " << names[input_token] ;
+            if(input_token == t_id || input_token == t_literal)
+                cout << " " << token_image <<endl;
+            else cout <<endl;
+
         }while(input_token = scan ());
     }
 }
@@ -246,12 +259,13 @@ void cond (const set<token>& follow_set) {
 void expr (const set<token> &follow_set) {
     try{
         print_token_set(follow_set);
+        check_for_error("expr", follow_set);
         switch (input_token) {
             case t_id:
             case t_literal:
             case t_lparen:
                 cout << "predict expr --> term term_tail" << endl;
-                term (follow_set);
+                term (first_sets["term_tail"]);
                 term_tail (follow_set);
                 break;
             default: 
@@ -266,21 +280,28 @@ void expr (const set<token> &follow_set) {
                 expr (follow_set);
                 return;
             }else if(isInSet(input_token, follow_set)){
-                cout << names[input_token] << " is in context FOLLOW(expr)" << endl;
+                cout << names[input_token] << " is in FOLLOW(expr)" << endl;
                 return;
             }
+
+            cout << "DEBUG " << "delete cnt token: " << names[input_token] ;
+            if(input_token == t_id || input_token == t_literal)
+                cout << " " << token_image <<endl;
+            else cout <<endl;
+
         }while(input_token = scan ());
     }
 }
 
 void term_tail (const set<token> &follow_set) {
+    print_token_set(follow_set);
     switch (input_token) {
         case t_add:
         case t_sub:
             cout << "predict term_tail --> add_op term term_tail" << endl;
             add_op ();
-            term (follow_sets["term"]);
-            term_tail (follow_sets["term_tail"]);
+            term (follow_set);
+            term_tail (follow_set);
             break;
         case t_rparen:
         case t_id:
@@ -304,12 +325,13 @@ void term_tail (const set<token> &follow_set) {
 }
 
 void term (const set<token> &follow_set) {
+    print_token_set(follow_set);
     switch (input_token) {
         case t_id:
         case t_literal:
         case t_lparen:
             cout << "predict term --> factor factor_tail" << endl;
-            factor (follow_set);
+            factor (first_sets["factor_tail"]);
             factor_tail (follow_set);
             break;
         default: 
@@ -326,7 +348,7 @@ void factor_tail (const set<token> &follow_set) {
             case t_div:
                 cout << "predict factor_tail --> mul_op factor factor_tail" << endl;
                 mul_op ();
-                factor (follow_set);
+                factor (/*first_sets["factor_tail"]*/set<token> ({t_add, t_sub, t_eof}));
                 factor_tail (follow_set);
                 break;
             case t_add:
@@ -359,17 +381,20 @@ void factor_tail (const set<token> &follow_set) {
                 factor_tail (follow_set);
                 return;
             }else if(isInSet(input_token, follow_set)){
-                cout << "DEBUG " << names[input_token] << " is in context FOLLOW(factor_tail), return" << endl;
+                cout << "DEBUG " << names[input_token] << " is in FOLLOW(factor_tail), return" << endl;
                 return;
             }
-            cout << "DEBUG " << "delete cnt token " << names[input_token] <<endl;
+            cout << "DEBUG " << "delete cnt token: " << names[input_token] ;
+            if(input_token == t_id || input_token == t_literal)
+                cout << " " << token_image <<endl;
+            else cout <<endl;
         }while(input_token = scan ());
 
     }
 }
 
 void factor (const set<token> &follow_set) {
-    set<token> lparen_follow_set = {t_rparen};
+    print_token_set(follow_set);
     switch (input_token) {
         case t_id :
             cout << "predict factor --> id" << endl;
@@ -382,7 +407,7 @@ void factor (const set<token> &follow_set) {
         case t_lparen:
             cout << "predict factor --> lparen expr rparen" << endl;
             match (t_lparen);
-            expr (set<token> ( {t_rparen} ) );
+            expr (set<token> ({t_rparen, t_eof}));
             match (t_rparen);
             break;
         default: 
