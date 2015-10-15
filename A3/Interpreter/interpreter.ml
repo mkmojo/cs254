@@ -417,6 +417,7 @@ let reduce_1_prod (astack:parse_tree list) (rhs_len:int) : parse_tree list =
     | _ -> raise (Failure "expected nonterminal at top of astack") in
    helper astack rhs_len [];;
 
+let simple_add_prog = "read a read b write (a + b)";;
 let sum_ave_prog = "read a read b sum := a + b write sum write sum / 2";;
 let primes_prog = "
      read n
@@ -690,6 +691,9 @@ and interpret_cond ((op:string), (lo:ast_e), (ro:ast_e)) (mem:memory)
     Testing
  *******************************************************************)
 
+let simple_add_parse_tree = parse ecg_parse_table simple_add_prog;;
+let simple_add_syntax_tree = ast_ize_P simple_add_parse_tree;;
+
 let sum_ave_parse_tree = parse ecg_parse_table sum_ave_prog;;
 let sum_ave_syntax_tree = ast_ize_P sum_ave_parse_tree;;
 
@@ -707,6 +711,9 @@ let main () =
   print_newline ();
   print_string (interpret sum_ave_syntax_tree "4 foo");
     (* should print "non-numeric input" *)
+  print_newline ();
+  print_string (interpret simple_add_syntax_tree "2 3");
+    (* should print 5 *)
   print_newline ();
   print_string (ecg_run "write 3 write 2 / 0" "");
     (* should print "3 divide by zero" *)
