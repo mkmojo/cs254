@@ -580,21 +580,40 @@ and ast_ize_S (s:parse_tree) : ast_s =
 and ast_ize_expr (e:parse_tree) : ast_e =
   (* e is an E, T, or F parse tree node *)
   match e with
-  | PT_nt ("E", [term; t_tail]) -> (ast_ize_T term) @ (ast_ize_TT t_tail)
+  | PT_nt ("E", [term; term_tail]) 
+  -> let lhs = ast_ize_T term in
+        ast_ize_TT lhs term_tail
   | _ -> raise (Failure "malformed parse tree in ast_ize_expr")
-
-and ast_ize_expr_tail (lhs:ast_e) (tail:parse_tree) : ast_e =
-  (* lhs in an inherited attribute.
-     tail is a TT or FT parse tree node *)
-  match tail with
-  (*
-     your code here ...
-  *)
-  | _ -> raise (Failure "malformed parse tree in ast_ize_expr_tail")
 
 and ast_ize_T (t:parse_tree) : ast_e =
     match t with
-    | PT_nt ("T", [fact; f_tail]) -> (ast_ize_F fact) ; (ast_ize_FT f_tail)
+    | PT_nt ("T", [factor; factor_tail]) 
+        ->  let lhs = ast_ize_F factor in
+            ast_ize_FT lhs factor_tail
+    | _ -> raise (Failure "malformed parse tree in ast_ize_T")
+
+and ast_ize_TT (lhs:ast_e) (tail:parse_tree) : ast_e =
+  match tail with
+  | PT_nt ("TT", []) -> lhs
+  | PT_nt ("TT", [ao; term; term_tail])
+    ->(ast_ize_TT (AST_binop("+", lhs, (ast_ize_T term))) term_tail)
+  | _ -> raise (Failure "malformed parse tree in ast_ize_TT")
+
+and ast_ize_F (f:parse_tree) : ast_e = 
+    match f with
+    | PT_nt ("F", [PT_num num]) -> AST_num num
+    | PT_nt ("F", [PT_id id]) -> AST_num id 
+    | PT_nt ("F", [PT_term "("; expr; PT_term ")"]) -> ast_ize_expr expr 
+    | _ -> raise (Failure "malformed parse tree in ast_ize_F")
+
+and ast_ize_FT (lhs:ast_e) (tail:parse_tree) : ast_e =
+  (* lhs in an inherited attribute.
+     tail is a TT or FT parse tree node *)
+  match tail with
+  | PT_nt ("FT", []) -> lhs 
+  | PT_nt ("FT", [mo; factor; factor_tail]) 
+      ->(ast_ize_FT (AST_binop("*", lhs, (ast_ize_F factor))) factor_tail)
+  | _ -> raise (Failure "malformed parse tree in ast_ize_FT")
 
 and ast_ize_C (c:parse_tree) : ast_c =
   match c with
@@ -696,7 +715,6 @@ and interpret_cond ((op:string), (lo:ast_e), (ro:ast_e)) (mem:memory)
 (*******************************************************************
     Testing
  *******************************************************************)
-(*
 let simple_add_parse_tree = parse ecg_parse_table simple_add_prog;;
 let simple_add_syntax_tree = ast_ize_P simple_add_parse_tree;;
 
@@ -707,12 +725,10 @@ let primes_parse_tree = parse ecg_parse_table primes_prog;;
 let primes_syntax_tree = ast_ize_P primes_parse_tree;;
 
 let ecg_run prog inp = interpret (ast_ize_P (parse ecg_parse_table prog)) inp;;
-*)
 
 let read_parse_tree = parse ecg_parse_table "";;
 
 let main () =
-(*
   print_string (interpret sum_ave_syntax_tree "4 6");
     (* should print "10 5" *)
   print_newline ();
@@ -733,7 +749,6 @@ let main () =
   print_newline ();
   print_string (ecg_run "read a read b" "3");
     (* should print "unexpected end of input" *)
-*)
   print_newline ();;
 
 (* Execute function "main" iff run as a stand-alone program. *)
