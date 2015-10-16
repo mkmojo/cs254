@@ -560,26 +560,30 @@ let rec ast_ize_P (p:parse_tree) : ast_sl =
 and ast_ize_SL (sl:parse_tree) : ast_sl =
   match sl with
   | PT_nt ("SL", []) -> []
-  | PT_nt ("SL", [s; sl]) -> ([ast_ize_S s] @ (ast_ize_SL sl))
+  | PT_nt ("SL", [s; sl]) -> [ast_ize_S s] @ (ast_ize_SL sl)
   | _ -> raise (Failure "malformed parse tree in ast_ize_SL")
 
 and ast_ize_S (s:parse_tree) : ast_s =
   match s with
   | PT_nt ("S", [PT_id lhs; PT_term ":="; expr])
         -> AST_assign (lhs, (ast_ize_expr expr))
-  | PT_nt ("S", [PT_term "read" ; PT_id x])
+  | PT_nt ("S", [PT_term "read" ; PT_id x]) 
         -> AST_read (x)
+  | PT_nt ("S", [PT_term "write" ; expr])
+        -> AST_write(ast_ize_expr expr)
+  | PT_nt ("S", [PT_term "if"; cond; sl; PT_term "end"])
+        -> AST_if (ast_ize_C cond, ast_ize_SL sl)
+  | PT_nt ("S", [PT_term "while"; cond; sl; PT_term "end"])
+        -> AST_if (ast_ize_C cond, ast_ize_SL sl)
   | _ -> raise (Failure "malformed parse tree in ast_ize_S")
 
 and ast_ize_expr (e:parse_tree) : ast_e =
   (* e is an E, T, or F parse tree node *)
   match e with
-  (*
-     your code here ...
-  *)
+  | PT_nt ("E", [term; t_tail]) -> (ast_ize_T term) @ (ast_ize_TT t_tail)
   | _ -> raise (Failure "malformed parse tree in ast_ize_expr")
 
-and ast_ize_expr_tail (lhs:ast_e) (tail:parse_tree) :ast_e =
+and ast_ize_expr_tail (lhs:ast_e) (tail:parse_tree) : ast_e =
   (* lhs in an inherited attribute.
      tail is a TT or FT parse tree node *)
   match tail with
@@ -588,11 +592,14 @@ and ast_ize_expr_tail (lhs:ast_e) (tail:parse_tree) :ast_e =
   *)
   | _ -> raise (Failure "malformed parse tree in ast_ize_expr_tail")
 
+and ast_ize_T (t:parse_tree) : ast_e =
+    match t with
+    | PT_nt ("T", [fact; f_tail]) -> (ast_ize_F fact) ; (ast_ize_FT f_tail)
+
 and ast_ize_C (c:parse_tree) : ast_c =
   match c with
-  (*
-     your code here ...
-  *)
+  | PT_nt ("C", [lhs; PT_nt ("rn", [PT_term rn]); rhs]) 
+        -> (rn, ast_ize_expr lhs, ast_ize_expr rhs)
   | _ -> raise (Failure "malformed parse tree in ast_ize_C")
 ;;
 
