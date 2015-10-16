@@ -595,8 +595,8 @@ and ast_ize_T (t:parse_tree) : ast_e =
 and ast_ize_TT (lhs:ast_e) (tail:parse_tree) : ast_e =
   match tail with
   | PT_nt ("TT", []) -> lhs
-  | PT_nt ("TT", [ao; term; term_tail])
-    ->(ast_ize_TT (AST_binop("+", lhs, (ast_ize_T term))) term_tail)
+  | PT_nt ("TT", [PT_nt ("ao", [PT_term ao]); term; term_tail])
+    ->(ast_ize_TT (AST_binop(ao, lhs, (ast_ize_T term))) term_tail)
   | _ -> raise (Failure "malformed parse tree in ast_ize_TT")
 
 and ast_ize_F (f:parse_tree) : ast_e = 
@@ -611,8 +611,8 @@ and ast_ize_FT (lhs:ast_e) (tail:parse_tree) : ast_e =
      tail is a TT or FT parse tree node *)
   match tail with
   | PT_nt ("FT", []) -> lhs 
-  | PT_nt ("FT", [mo; factor; factor_tail]) 
-      ->(ast_ize_FT (AST_binop("*", lhs, (ast_ize_F factor))) factor_tail)
+  | PT_nt ("FT", [PT_nt ("mo", [PT_term mo]); factor; factor_tail]) 
+      ->(ast_ize_FT (AST_binop(mo, lhs, (ast_ize_F factor))) factor_tail)
   | _ -> raise (Failure "malformed parse tree in ast_ize_FT")
 
 and ast_ize_C (c:parse_tree) : ast_c =
@@ -621,6 +621,7 @@ and ast_ize_C (c:parse_tree) : ast_c =
         -> (rn, ast_ize_expr lhs, ast_ize_expr rhs)
   | _ -> raise (Failure "malformed parse tree in ast_ize_C")
 ;;
+
 
 (*******************************************************************
     Interpreter
