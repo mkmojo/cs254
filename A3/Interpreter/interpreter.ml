@@ -554,7 +554,7 @@ and ast_c = (string * ast_e * ast_e);;
 
 let rec ast_ize_P (p:parse_tree) : ast_sl = 
     match p with
-    | PT_nt ("P", [sl]) -> (ast_ize_SL sl)
+    | PT_nt ("P", [sl; p_end]) -> (ast_ize_SL sl)
     | _ -> raise (Failure "malformed parse tree in ast_ize_P")
 
 and ast_ize_SL (sl:parse_tree) : ast_sl =
