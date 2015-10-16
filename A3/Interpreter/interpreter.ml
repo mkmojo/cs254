@@ -10,6 +10,7 @@
     Alternatively, can be "#use"-ed (or compiled and then "#load"-ed)
     into the top-level interpreter,
  *******************************************************************)
+#load "str.cma"
 
 open List;;
 (* The List library includes a large collection of useful functions.
@@ -417,7 +418,7 @@ let reduce_1_prod (astack:parse_tree list) (rhs_len:int) : parse_tree list =
     | _ -> raise (Failure "expected nonterminal at top of astack") in
    helper astack rhs_len [];;
 
-let simple_add_prog = "read a read b write (a + b)";;
+let simple_add_prog = "read a read b write a + b";;
 let sum_ave_prog = "read a read b sum := a + b write sum write sum / 2";;
 let primes_prog = "
      read n
@@ -551,16 +552,15 @@ and ast_e =
 | AST_num of string
 and ast_c = (string * ast_e * ast_e);;
 
-let rec ast_ize_P (p:parse_tree) : ast_sl =
-  (* your code should replace the following line *)
-  []
+let rec ast_ize_P (p:parse_tree) : ast_sl = 
+    match p with
+    | PT_nt ("P", [sl]) -> (ast_ize_SL sl)
+    | _ -> raise (Failure "malformed parse tree in ast_ize_P")
 
 and ast_ize_SL (sl:parse_tree) : ast_sl =
   match sl with
   | PT_nt ("SL", []) -> []
-  (*
-     your code here ...
-  *)
+  | PT_nt ("SL", [s; sl]) -> [(ast_ize_S s)]
   | _ -> raise (Failure "malformed parse tree in ast_ize_SL")
 
 and ast_ize_S (s:parse_tree) : ast_s =
@@ -690,7 +690,7 @@ and interpret_cond ((op:string), (lo:ast_e), (ro:ast_e)) (mem:memory)
 (*******************************************************************
     Testing
  *******************************************************************)
-
+(*
 let simple_add_parse_tree = parse ecg_parse_table simple_add_prog;;
 let simple_add_syntax_tree = ast_ize_P simple_add_parse_tree;;
 
@@ -701,8 +701,12 @@ let primes_parse_tree = parse ecg_parse_table primes_prog;;
 let primes_syntax_tree = ast_ize_P primes_parse_tree;;
 
 let ecg_run prog inp = interpret (ast_ize_P (parse ecg_parse_table prog)) inp;;
+*)
+
+let read_parse_tree = parse ecg_parse_table "";;
 
 let main () =
+(*
   print_string (interpret sum_ave_syntax_tree "4 6");
     (* should print "10 5" *)
   print_newline ();
@@ -723,6 +727,7 @@ let main () =
   print_newline ();
   print_string (ecg_run "read a read b" "3");
     (* should print "unexpected end of input" *)
+*)
   print_newline ();;
 
 (* Execute function "main" iff run as a stand-alone program. *)
