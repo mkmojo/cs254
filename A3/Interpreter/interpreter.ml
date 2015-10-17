@@ -602,7 +602,7 @@ and ast_ize_TT (lhs:ast_e) (tail:parse_tree) : ast_e =
 and ast_ize_F (f:parse_tree) : ast_e = 
     match f with
     | PT_nt ("F", [PT_num num]) -> AST_num num
-    | PT_nt ("F", [PT_id id]) -> AST_num id 
+    | PT_nt ("F", [PT_id id]) -> AST_id id 
     | PT_nt ("F", [PT_term "("; expr; PT_term ")"]) -> ast_ize_expr expr 
     | _ -> raise (Failure "malformed parse tree in ast_ize_F")
 
