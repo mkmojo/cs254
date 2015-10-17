@@ -602,7 +602,7 @@ and ast_ize_TT (lhs:ast_e) (tail:parse_tree) : ast_e =
 and ast_ize_F (f:parse_tree) : ast_e = 
     match f with
     | PT_nt ("F", [PT_num num]) -> AST_num num
-    | PT_nt ("F", [PT_id id]) -> AST_id id 
+    | PT_nt ("F", [PT_id id]) -> AST_id id
     | PT_nt ("F", [PT_term "("; expr; PT_term ")"]) -> ast_ize_expr expr 
     | _ -> raise (Failure "malformed parse tree in ast_ize_F")
 
@@ -657,8 +657,10 @@ and interpret_sl (sl:ast_sl) (mem:memory)
                  (inp:string list) (outp:string list)
     : bool * memory * string list * string list =
     (* ok?   new_mem       new_input     new_output *)
-  (* your code should replace the following line *)
-  (true, mem, inp, outp)
+    match sl with
+    | [] -> (true, mem, inp, outp)
+    | h::t -> let (ok, new_mem, new_inp, new_outp) =  interpret_s h mem inp outp
+          in (interpret_sl t new_mem new_inp new_outp)
 
 (* NB: the following routine is complete.  You can call it on any
    statement node and it figures out what more specific case to invoke.
@@ -689,8 +691,10 @@ and interpret_read (id:string) (mem:memory)
 and interpret_write (expr:ast_e) (mem:memory)
                     (inp:string list) (outp:string list)
     : bool * memory * string list * string list =
-  (* your code should replace the following line *)
-  (true, mem, inp, outp)
+    match expr with
+    | AST_num num -> (true, mem, inp, outp @ [num])
+    | AST_id id -> let nv = find (fun pair -> (fst pair) = id ) mem in
+    (true, mem, inp, outp @ [(string_of_int (snd nv))])
 
 and interpret_if (cond:ast_c) (sl:ast_sl) (mem:memory)
                  (inp:string list) (outp:string list)
