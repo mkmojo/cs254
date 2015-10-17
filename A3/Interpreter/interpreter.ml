@@ -702,10 +702,16 @@ and interpret_read (id:string) (mem:memory)
 and interpret_write (expr:ast_e) (mem:memory)
                     (inp:string list) (outp:string list)
     : bool * memory * string list * string list =
-    match expr with
-    | AST_num num -> (true, mem, inp, outp @ [num])
-    | AST_id id -> let nv = find (fun pair -> (fst pair) = id ) mem in
-    (true, mem, inp, outp @ [(string_of_int (snd nv))])
+    let res = (fst (interpret_expr expr mem)) in
+        match expr with
+        | AST_num num -> (true, mem, inp, outp @ [num])
+        | AST_id id -> let nv = find (fun pair -> (fst pair) = id ) mem in
+                        (true, mem, inp, outp @ [(string_of_int (snd nv))])
+        | AST_binop (_, _, _) -> match res with
+                    | Value(v) -> (true, mem, inp, outp @ [string_of_int v])
+                    | Error(err_msg) -> (false, mem, inp, outp @ [err_msg])
+                    | _ -> raise (Failure "match AST_write interpreter_write")
+        | _ -> raise (Failure "match AST_write interpreter_write")
 
 and interpret_if (cond:ast_c) (sl:ast_sl) (mem:memory)
                  (inp:string list) (outp:string list)
@@ -720,8 +726,13 @@ and interpret_while (cond:ast_c) (sl:ast_sl) (mem:memory)
   (true, mem, inp, outp)
 
 and interpret_expr (expr:ast_e) (mem:memory) : value * memory =
-  (* your code should replace the following line *)
-  (Error("code not written yet"), mem)
+    match expr with
+    | AST_id id -> (Value (snd (find (fun x -> (fst x) = id) mem)), mem)
+    | AST_num num -> (Value (int_of_string num), mem)
+    | AST_binop (binop, lhs, rhs) -> match binop with
+            | "*" -> match ((fst (interpret_expr lhs mem)), rhs) with
+                    |(Value(v), AST_num num) -> (Value( v * (int_of_string num)), mem)
+    | _ -> (Error("code not written yet"), mem)
 
 and interpret_cond ((op:string), (lo:ast_e), (ro:ast_e)) (mem:memory)
     : value * memory =
