@@ -679,8 +679,19 @@ and interpret_s (s:ast_s) (mem:memory)
 and interpret_assign (lhs:string) (rhs:ast_e) (mem:memory)
                      (inp:string list) (outp:string list)
     : bool * memory * string list * string list =
-  (* your code should replace the following line *)
-  (true, mem, inp, outp)
+        let rec all_mem_but_this nv l =
+            let rec helper k ls acc : memory =
+            match ls with
+            | [] -> acc
+            | h::tail -> if ( (fst k) <> (fst h) )
+                            then helper k tail ([h] @ acc)
+                            else helper k tail acc
+            in helper nv l [] in
+            match rhs with
+                | AST_num num -> let new_nv = (lhs, int_of_string num)
+                in let rest_mem = all_mem_but_this new_nv mem
+                in (true, [new_nv] @ rest_mem, inp, outp)
+                | _ -> raise (Failure "match AST_num fail in interpret_assign")
 
 and interpret_read (id:string) (mem:memory)
                    (inp:string list) (outp:string list)
