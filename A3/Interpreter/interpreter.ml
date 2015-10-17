@@ -716,22 +716,24 @@ and interpret_write (expr:ast_e) (mem:memory)
 and interpret_if (cond:ast_c) (sl:ast_sl) (mem:memory)
                  (inp:string list) (outp:string list)
     : bool * memory * string list * string list =
-  (* your code should replace the following line *)
   (true, mem, inp, outp)
 
 and interpret_while (cond:ast_c) (sl:ast_sl) (mem:memory)
                     (inp:string list) (outp:string list)
     : bool * memory * string list * string list =
-  (* your code should replace the following line *)
   (true, mem, inp, outp)
 
 and interpret_expr (expr:ast_e) (mem:memory) : value * memory =
     match expr with
     | AST_id id -> (Value (snd (find (fun x -> (fst x) = id) mem)), mem)
     | AST_num num -> (Value (int_of_string num), mem)
-    | AST_binop (binop, lhs, rhs) -> match binop with
-            | "*" -> match ((fst (interpret_expr lhs mem)), rhs) with
-                    |(Value(v), AST_num num) -> (Value( v * (int_of_string num)), mem)
+    | AST_binop (binop, lhs, rhs) -> let res_l = (fst (interpret_expr lhs mem))
+        in let res_r = (fst (interpret_expr rhs mem))
+        in match (binop, res_l, res_r) with
+        | ("*", Value(lv), Value(rv))-> (Value( lv * rv), mem)
+        | ("/", Value(lv), Value(rv))-> (Value( lv / rv), mem)
+        | ("+", Value(lv), Value(rv))-> (Value( lv + rv), mem)
+        | ("-", Value(lv), Value(rv))-> (Value( lv - rv), mem)
     | _ -> (Error("code not written yet"), mem)
 
 and interpret_cond ((op:string), (lo:ast_e), (ro:ast_e)) (mem:memory)
