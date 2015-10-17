@@ -685,8 +685,8 @@ and interpret_assign (lhs:string) (rhs:ast_e) (mem:memory)
 and interpret_read (id:string) (mem:memory)
                    (inp:string list) (outp:string list)
     : bool * memory * string list * string list =
-  (* your code should replace the following line *)
-  (true, mem, inp, outp)
+    let nv = (id, int_of_string (hd inp)) in
+    (true, [nv] @ mem, tl inp, outp)
 
 and interpret_write (expr:ast_e) (mem:memory)
                     (inp:string list) (outp:string list)
