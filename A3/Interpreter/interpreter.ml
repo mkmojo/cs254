@@ -696,8 +696,10 @@ and interpret_assign (lhs:string) (rhs:ast_e) (mem:memory)
 and interpret_read (id:string) (mem:memory)
                    (inp:string list) (outp:string list)
     : bool * memory * string list * string list =
-    let nv = (id, int_of_string (hd inp)) in
-    (true, [nv] @ mem, tl inp, outp)
+        let cnt_input = try (hd inp) with e -> raise e (*unexpec end of input*)
+        in let value:int = try int_of_string cnt_input with e -> raise e (*non-numeric input*)
+        in let nv:string * int = (id, value)
+        in (true, [nv] @ mem, tl inp, outp)
 
 and interpret_write (expr:ast_e) (mem:memory)
                     (inp:string list) (outp:string list)
@@ -744,7 +746,7 @@ and interpret_expr (expr:ast_e) (mem:memory) : value * memory =
         in let Value(rv) = (fst (interpret_expr rhs mem))
         in match binop with
         | "*" -> (Value( lv * rv), mem)
-        | "/" -> (Value( lv / rv), mem)
+        | "/" -> if rv <> 0 then (Value( lv / rv), mem) else (Error("divide by zero"), mem)
         | "+" -> (Value( lv + rv), mem)
         | "-" -> (Value( lv - rv), mem)
     | _ -> (Error("code not written yet"), mem)
