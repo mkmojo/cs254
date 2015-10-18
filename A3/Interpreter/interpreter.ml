@@ -659,7 +659,8 @@ and interpret_sl (sl:ast_sl) (mem:memory)
     (* ok?   new_mem       new_input     new_output *)
     match sl with
     | [] -> (true, mem, inp, outp)
-    | h::t -> let (ok, new_mem, new_inp, new_outp) =  interpret_s h mem inp outp
+    | h::t -> let (ok, new_mem, new_inp, new_outp) =  
+        try (interpret_s h mem inp outp) with e-> (false, [],[],["error while interpreting"]) 
           in (interpret_sl t new_mem new_inp new_outp)
 
 (* NB: the following routine is complete.  You can call it on any
