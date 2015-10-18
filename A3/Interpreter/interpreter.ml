@@ -687,8 +687,8 @@ and interpret_assign (lhs:string) (rhs:ast_e) (mem:memory)
                             then helper k tail ([h] @ acc)
                             else helper k tail acc
             in helper nv l []
-            in let res_r = (fst (interpret_expr rhs mem)) in match rhs with
-            | AST_num num -> let new_nv = (lhs, int_of_string num)
+            in let res_r = (fst (interpret_expr rhs mem)) in match res_r with
+            | Value (vr) -> let new_nv = (lhs, vr)
             in let rest_mem = all_mem_but_this new_nv mem
             in (true, [new_nv] @ rest_mem, inp, outp)
             | _ -> raise (Failure "match AST_num fail in interpret_assign")
@@ -716,7 +716,13 @@ and interpret_write (expr:ast_e) (mem:memory)
 and interpret_if (cond:ast_c) (sl:ast_sl) (mem:memory)
                  (inp:string list) (outp:string list)
     : bool * memory * string list * string list =
-  (true, mem, inp, outp)
+        let (op, lh, rh) =  cond
+        in let res_eval:value = (fst (interpret_cond (op, lh, rh) mem))
+        in match res_eval with
+        | Value (1) -> (interpret_sl sl mem inp outp)
+        | Value (0) -> (true, mem, inp, outp)
+        | Error (err_msg) -> (false, mem, inp, outp @ [err_msg])
+        | _ -> raise (Failure "interpret_if error eval fail ")
 
 and interpret_while (cond:ast_c) (sl:ast_sl) (mem:memory)
                     (inp:string list) (outp:string list)
@@ -727,19 +733,27 @@ and interpret_expr (expr:ast_e) (mem:memory) : value * memory =
     match expr with
     | AST_id id -> (Value (snd (find (fun x -> (fst x) = id) mem)), mem)
     | AST_num num -> (Value (int_of_string num), mem)
-    | AST_binop (binop, lhs, rhs) -> let res_l = (fst (interpret_expr lhs mem))
-        in let res_r = (fst (interpret_expr rhs mem))
-        in match (binop, res_l, res_r) with
-        | ("*", Value(lv), Value(rv))-> (Value( lv * rv), mem)
-        | ("/", Value(lv), Value(rv))-> (Value( lv / rv), mem)
-        | ("+", Value(lv), Value(rv))-> (Value( lv + rv), mem)
-        | ("-", Value(lv), Value(rv))-> (Value( lv - rv), mem)
+    | AST_binop (binop, lhs, rhs) -> let Value(lv) = (fst (interpret_expr lhs mem))
+        in let Value(rv) = (fst (interpret_expr rhs mem))
+        in match binop with
+        | "*" -> (Value( lv * rv), mem)
+        | "/" -> (Value( lv / rv), mem)
+        | "+" -> (Value( lv + rv), mem)
+        | "-" -> (Value( lv - rv), mem)
     | _ -> (Error("code not written yet"), mem)
 
 and interpret_cond ((op:string), (lo:ast_e), (ro:ast_e)) (mem:memory)
     : value * memory =
-  (* your code should replace the following line *)
-  (Error("code not written yet"), mem)
+        let Value (lv) = (fst (interpret_expr lo mem)) in 
+        let Value (rv) = (fst (interpret_expr ro mem)) in
+        match (op, lv, rv) with 
+        | ("==", lv, rv) -> if lv = rv then (Value(1), mem) else (Value(0), mem)
+        | ("!=", lv, rv) -> if lv <> rv then (Value(1), mem) else (Value(0), mem)
+        | ("<=", lv, rv) -> if lv <= rv then (Value(1), mem) else (Value(0), mem)
+        | (">=", lv, rv) -> if lv >= rv then (Value(1), mem) else (Value(0), mem)
+        | ("<", lv, rv) -> if lv < rv then (Value(1), mem) else (Value(0), mem)
+        | (">", lv, rv) -> if lv > rv then (Value(1), mem) else (Value(0), mem)
+        | _ -> (Error("code not written yet"), mem)
 
 (*******************************************************************
     Testing
