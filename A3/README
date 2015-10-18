@@ -1,0 +1,27 @@
+CSC254 Assignment 3: Interpreter
+
+Goal:
+    - Add AST generation functionality to extended calculator language
+    - Interpte program written in extended calculator language
+My Progress:
+    I have finished both.
+Extra credit:
+    - Exception handling:
+        handler for divide by zero is installed. The interpreter will
+        continue to run and correctly catch divide by zero exception. 
+
+How to use:
+    - Input Format:
+        Input program is a string written in calculator language. One
+        example of such program is 
+        let my_prog = "write (1+3)*2";;
+
+    - Execute Program: 
+        To get an AST run:
+            ast_ize_P (parse ecg_parse_table my_prog)
+        To interprete the program:
+            interpret (ast_ize_P (parse ecg_parse_table my_prog) "";;
+
+Known Bugs:
+    Does not handle exceptions other than divide_by_zero well. For 
+    instance exception like unexpected_input is not handled correctly. 
