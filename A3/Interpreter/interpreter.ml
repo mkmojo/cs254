@@ -574,7 +574,7 @@ and ast_ize_S (s:parse_tree) : ast_s =
   | PT_nt ("S", [PT_term "if"; cond; sl; PT_term "end"])
         -> AST_if (ast_ize_C cond, ast_ize_SL sl)
   | PT_nt ("S", [PT_term "while"; cond; sl; PT_term "end"])
-        -> AST_if (ast_ize_C cond, ast_ize_SL sl)
+        -> AST_while (ast_ize_C cond, ast_ize_SL sl)
   | _ -> raise (Failure "malformed parse tree in ast_ize_S")
 
 and ast_ize_expr (e:parse_tree) : ast_e =
@@ -727,7 +727,14 @@ and interpret_if (cond:ast_c) (sl:ast_sl) (mem:memory)
 and interpret_while (cond:ast_c) (sl:ast_sl) (mem:memory)
                     (inp:string list) (outp:string list)
     : bool * memory * string list * string list =
-  (true, mem, inp, outp)
+        let (op, lh, rh) =  cond
+        in let res_eval:value = (fst (interpret_cond (op, lh, rh) mem))
+        in match res_eval with
+        | Value (1) -> let (_, new_mem, new_inp, new_outp) = interpret_sl sl mem inp outp
+                    in (interpret_while cond sl new_mem new_inp new_outp)
+        | Value (0) -> (true, mem, inp, outp)
+        | Error (err_msg) -> (false, mem, inp, outp @ [err_msg])
+        | _ -> raise (Failure "interpret_if error eval fail ")
 
 and interpret_expr (expr:ast_e) (mem:memory) : value * memory =
     match expr with
