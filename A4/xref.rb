@@ -58,10 +58,30 @@ def mk_html_files(old_root, new_root)
     }
 end
 
+def mk_index_file (index_file_path, list_files)
+    mkdir(File.expand_path('..', index_file_path))
+    File.open(index_file_path, 'w+')  {|f|
+        f.write('<HTML>')
+        f.write('<BODY>')
+        list_files.each { |file_name|
+            url = '.' + file_name + '.html'
+            f.write('<p>')
+            f.write('<a href="'+ url + '">'+ file_name +'</a>')
+            f.write('</p>')
+        }
+        # Make time stamp
+        f.write('Created Time: ' + File.mtime(f).to_s + '</br>')
+        # File location
+        f.write('Created WD: ' +  Dir.getwd.to_s)
+        f.write('</BODY>')
+        f.write('</HTML>')
+    }
+end
+
 def main
-    mkdir('./HTML')
     p_root = get_project_root('./test/dump1.txt')
     mk_html_files(p_root, './HTML')
+    mk_index_file('./HTML/index.html', list_files(p_root))
 end
 
 if __FILE__ == $0
