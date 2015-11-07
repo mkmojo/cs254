@@ -30,7 +30,7 @@ def get_project_root (dumpfile)
     File.open(dumpfile).each { |line|
         res.add(line.split[1]) if /DW_AT_comp_dir/.match(line)
     }
-    raise "[ERROR] " + dumpfile + " size is not 1" unless res.size == 1
+    raise '[ERROR] ' + dumpfile + ' size is not 1' unless res.size == 1
     # Give back the ONLY element in set
     res.to_a[0]
 end
