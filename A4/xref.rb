@@ -108,6 +108,45 @@ def generate_dumpfile(binary_path)
     out_path
 end
 
+class Ident
+    def initialize(name, src_path, line_num, id)
+        @name = name
+        @src_path = abs_path(src_path)
+        @line_num = Int(line_num)
+        @id = id
+    end
+
+    def name
+        @name
+    end
+
+    def src_path
+        @src_path
+    end
+
+    def line_num
+        @line_num
+    end
+
+    def id
+        @id
+    end
+
+    def abs_path(path)
+        if path[0] == '/'
+            path
+        else
+            raise 'Error, has to be absolute path'
+        end
+    end
+end
+
+def give_name_to_global_ident(dump_file)
+    File.foreach(File.open(dump_file)).with_index{ |line, line_num|
+
+    }
+end
+
 
 def main
     dumpfile_path = generate_dumpfile(ARGV[0].to_s)
