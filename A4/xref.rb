@@ -41,15 +41,15 @@ def mk_html_files(old_root, new_root)
             mkdir(new_root + '/' + File.expand_path('..', child_path))
             File.open(new_root + child_path + '.html', 'w+'){ |html_f|
                 File.open(child_path, 'r'){|orig_f|
-                    html_f.write('<HTML>')
-                    html_f.write('<BODY>')
-                    html_f.write('<xmp>')
+                    html_f.write("<!DOCTYPE HTML>\n")
+                    html_f.write("<BODY>\n")
+                    html_f.write("<xmp>\n")
                     orig_f.each { |line|
                         html_f.write(line )
                     }
-                    html_f.write('</xmp>')
-                    html_f.write('</BODY>')
-                    html_f.write('</HTML>')
+                    html_f.write("</xmp>\n")
+                    html_f.write("</BODY>\n")
+                    html_f.write("</HTML>\n")
                 }
             }
         else
@@ -61,20 +61,20 @@ end
 def mk_index_file (index_file_path, list_files)
     mkdir(File.expand_path('..', index_file_path))
     File.open(index_file_path, 'w+')  {|f|
-        f.write('<HTML>')
-        f.write('<BODY>')
+        f.write("<!DOCTYPE HTML>\n")
+        f.write("<BODY>\n")
         list_files.each { |file_name|
             url = '.' + file_name + '.html'
             f.write('<p>')
             f.write('<a href="'+ url + '">'+ file_name +'</a>')
-            f.write('</p>')
+            f.write("</p>\n")
         }
         # Make time stamp
-        f.write('Created Time: ' + File.mtime(f).to_s + '</br>')
+        f.write('Created Time: ' + File.mtime(f).to_s + '<br>')
         # File location
         f.write('Created WD: ' +  Dir.getwd.to_s)
-        f.write('</BODY>')
-        f.write('</HTML>')
+        f.write("</BODY>\n")
+        f.write("</HTML>\n")
     }
 end
 
