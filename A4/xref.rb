@@ -5,6 +5,10 @@ def mkdir (dir_name)
     FileUtils.mkdir_p(dir_name) unless Dir.exist?(dir_name)
 end
 
+def is_interesting_filetype (path)
+    /.*\.([ch]|dump)/.match(path)
+end
+
 def list_content(path)
     if File.file?(path)
         nil
@@ -16,7 +20,7 @@ end
 def list_files (path)
     res = []
     list_content(path).each do |child_path|
-        res += if File.file?(child_path) && /.*\.[ch]/.match(child_path)
+        res += if File.file?(child_path) && is_interesting_filetype(child_path) 
                    [child_path]
                else
                    list_files(child_path + '/*')
@@ -35,19 +39,29 @@ def get_project_root (dumpfile)
     res.to_a[0]
 end
 
+def get_file_lines (filename)
+    File.foreach(filename) {}
+    $.
+end
+
 def mk_html_files(old_root, new_root)
     list_content(old_root).each { |child_path|
-        if File.file?(child_path) && /.*\.[ch]/.match(child_path)
+        if File.file?(child_path) && is_interesting_filetype(child_path) 
             mkdir(new_root + '/' + File.expand_path('..', child_path))
             File.open(new_root + child_path + '.html', 'w+'){ |html_f|
                 File.open(child_path, 'r'){|orig_f|
                     html_f.write("<!DOCTYPE HTML>\n")
                     html_f.write("<BODY>\n")
-                    html_f.write("<xmp>\n")
-                    orig_f.each { |line|
-                        html_f.write(line )
+                    html_f.write("<code>\n")
+                    File.foreach(orig_f).with_index { |line, line_num|
+                        line = (line_num + 1).to_s.ljust(get_file_lines(child_path).to_s.length, " ") + ' ' +  line
+                        line = line.gsub(/&/,'&amp;')
+                        line = line.gsub(/ /, '&nbsp;')
+                        line = line.gsub(/</,'&#60;')
+                        line = line.gsub(/>/,'&gt;')
+                        html_f.write( line + "<br>\n")
                     }
-                    html_f.write("</xmp>\n")
+                    html_f.write("</code>\n")
                     html_f.write("</BODY>\n")
                     html_f.write("</HTML>\n")
                 }
@@ -66,7 +80,7 @@ def mk_index_file (index_file_path, list_files)
         list_files.each { |file_name|
             url = '.' + file_name + '.html'
             f.write('<p>')
-            f.write('<a href="'+ url + '">'+ file_name +'</a>')
+            f.write('<a href="' + url + '">' + file_name + '</a>')
             f.write("</p>\n")
         }
         # Make time stamp
@@ -79,7 +93,7 @@ def mk_index_file (index_file_path, list_files)
 end
 
 def main
-    p_root = get_project_root('./test/dump1.txt')
+    p_root = get_project_root('./test/test.dump')
     mk_html_files(p_root, './HTML')
     mk_index_file('./HTML/index.html', list_files(p_root))
 end
