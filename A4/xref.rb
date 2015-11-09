@@ -224,36 +224,6 @@ def get_line_with_num_from_html_page(html_file, line_num)
   }
 end
 
-def mk_html_files(old_root, new_root)
-  list_content(old_root).each { |child_path|
-    if File.file?(child_path) && is_interesting_filetype(child_path)
-      mkdir(new_root + '/' + File.expand_path('..', child_path))
-      File.open(new_root + child_path + '.html', 'w+') { |html_f|
-        n_child_path = get_file_lines(child_path)
-        File.open(child_path, 'r') { |orig_f|
-          html_f.write("<!DOCTYPE HTML>\n")
-          html_f.write("<BODY>\n")
-          html_f.write("<code>\n")
-          File.foreach(orig_f).with_index { |line, line_num|
-            line = (line_num + 1).to_s.ljust(n_child_path.to_s.length, " ") + ' ' + line
-            # order of these replacement matters
-            # amp should go first
-            line = line.gsub(/&/, '&amp;')
-            line = line.gsub(/ /, '&nbsp;')
-            line = line.gsub(/</, '&#60;')
-            line = line.gsub(/>/, '&gt;')
-            html_f.write(line + "<br>\n")
-          }
-          html_f.write("</code>\n")
-          html_f.write("</BODY>\n")
-          html_f.write("</HTML>\n")
-        }
-      }
-    else
-      mk_html_files(child_path + '/*', new_root)
-    end
-  }
-end
 
 def add_global_ident_tag(src_file_path, line_num, line, cu)
   #print 'DEBUG: src_file_path: ',src_file_path ,' line_num: ' ,line_num, "\n"
