@@ -89,10 +89,7 @@ class CompileUnit
   end
 
   def to_s
-    puts @name
-    puts @comp_dir
-    print 'idents.size: ', @idents.size, "\n"
-    puts @idents
+    [@name, @comp_dir, ('idents.size: ' + @idents.size.to_s), @idents].join("\n")
   end
 
 end
@@ -262,7 +259,6 @@ def add_global_ident_tag(src_file_path, line_num, line, cu)
   #print 'DEBUG: src_file_path: ',src_file_path ,' line_num: ' ,line_num, "\n"
   ident = cu.idents.detect{|i| i.src_path == src_file_path && i.line_num == line_num }
   if ident 
-    puts ident.name
     line.gsub(/#{ident.name}/, '<a name = "' + ident.id + '">\0</a>')
   else
     line
@@ -319,6 +315,10 @@ def main
   mk_html_pages(p_root, './HTML',cus)
   mk_index_file('./HTML/index.html', list_files(p_root))
   #print stuff out
+  cus.values.each { |cu|
+    puts cu.to_s
+    puts
+  }
 end
 
 if __FILE__ == $0
