@@ -50,76 +50,6 @@ def get_file_lines (filename)
   $.
 end
 
-def mk_html_files(old_root, new_root)
-  list_content(old_root).each { |child_path|
-    if File.file?(child_path) && is_interesting_filetype(child_path)
-      mkdir(new_root + '/' + File.expand_path('..', child_path))
-      File.open(new_root + child_path + '.html', 'w+') { |html_f|
-        File.open(child_path, 'r') { |orig_f|
-          html_f.write("<!DOCTYPE HTML>\n")
-          html_f.write("<BODY>\n")
-          html_f.write("<code>\n")
-          File.foreach(orig_f).with_index { |line, line_num|
-            line = (line_num + 1).to_s.ljust(get_file_lines(child_path).to_s.length, " ") + ' ' + line
-            # order of these replacement matters
-            # amp should go first
-            line = line.gsub(/&/, '&amp;')
-            line = line.gsub(/ /, '&nbsp;')
-            line = line.gsub(/</, '&#60;')
-            line = line.gsub(/>/, '&gt;')
-            html_f.write(line + "<br>\n")
-          }
-          html_f.write("</code>\n")
-          html_f.write("</BODY>\n")
-          html_f.write("</HTML>\n")
-        }
-      }
-    else
-      mk_html_files(child_path + '/*', new_root)
-    end
-  }
-end
-
-def mk_index_file (index_file_path, list_files)
-  mkdir(File.expand_path('..', index_file_path))
-  File.open(index_file_path, 'w+') { |f|
-    f.write("<!DOCTYPE HTML>\n")
-    f.write("<BODY>\n")
-    list_files.each { |file_name|
-      url = '.' + file_name + '.html'
-      f.write('<p>')
-      f.write('<a href="' + url + '">' + file_name + '</a>')
-      f.write("</p>\n")
-    }
-    # Make time stamp
-    f.write('Created Time: ' + File.mtime(f).to_s + '<br>')
-    # File location
-    f.write('Created WD: ' + Dir.getwd.to_s)
-    f.write("</BODY>\n")
-    f.write("</HTML>\n")
-  }
-end
-
-def give_name_to_global_ident(dump_file)
-  idents = []
-  File.foreach(File.open(dump_file)).with_index { |line, line_num|
-    if (val_name = get_tag_val('DW_AT_name', line)) &&
-        (val_scope = get_tag_val('', line.split[0]).to_i) &&
-        (val_src_path = get_tag_val('DW_AT_decl_file', line).to_s.split[1]) &&
-        (val_line_num = get_tag_val('DW_AT_decl_line', line)) &&
-        (val_id = line_num.to_s)
-      if val_scope == 1
-        cnt_ident = CompileUnit::Ident.new(val_scope, val_name, val_src_path, val_line_num, val_id)
-        puts cnt_ident.to_s
-        puts
-      end
-    else
-      nil
-    end
-    #cnt_ident = Ident.new(line[0], line, 2, line_num.to_s)
-  }
-end
-
 def generate_dumpfile(binary_path)
   out_path = binary_path + '.dump'
   cmd = 'dwarfdump -di ' + '-O file=' + out_path + ' ' + binary_path
@@ -144,6 +74,10 @@ class CompileUnit
 
   def comp_dir
     @comp_dir
+  end
+
+  def idents
+    @idents
   end
 
   def add(ident)
@@ -171,6 +105,14 @@ class Ident
     @src_path = src_path
     @line_num = Integer(line_num, 16)
     @id = id
+  end
+
+  def type
+    @type
+  end
+
+  def scope
+    @scope
   end
 
   def name
@@ -204,13 +146,12 @@ class Ident
 end
 
 def get_src_path(tag, line, comp_dir)
-  (
   if get_tag_val(tag, line)
     path = get_tag_val(tag, line).split[1]
     Ident.get_abs_path(path, comp_dir)
   else
     nil
-  end)
+  end
 end
 
 def build_compile_unit (lines)
@@ -218,21 +159,21 @@ def build_compile_unit (lines)
   cu = CompileUnit.new
   lines.each_with_index { |line, line_num|
     case cu.get_ident_type(line)
-      when 'DW_TAG_compile_unit'
-        cnt_name = get_tag_val('DW_AT_name', line)
-        cnt_comp_dir = get_tag_val('DW_AT_comp_dir', line)
-        cu = CompileUnit.new(cnt_name, cnt_comp_dir)
-      else
-        if (cnt_type = cu.get_ident_type(line))&&
-            (cnt_scope = get_tag_val('', line.split[0]).to_i) &&
-            (cnt_name = get_tag_val('DW_AT_name', line)) &&
-            (cnt_src_path = get_src_path('DW_AT_decl_file', line, cu.comp_dir))&&
-            (cnt_line_num = get_tag_val('DW_AT_decl_line', line)) &&
-            (cnt_id = cu.name + '-' +line_num.to_s)
-          cnt_ident = Ident.new(cnt_type, cnt_scope, cnt_name, cnt_src_path, cnt_line_num, cnt_id)
-          #puts cnt_ident.to_s
-          cu.add(cnt_ident)
-        end
+    when 'DW_TAG_compile_unit'
+      cnt_name = get_tag_val('DW_AT_name', line)
+      cnt_comp_dir = get_tag_val('DW_AT_comp_dir', line)
+      cu = CompileUnit.new(cnt_name, cnt_comp_dir)
+    else
+      if (cnt_type = cu.get_ident_type(line))&&
+        (cnt_scope = get_tag_val('', line.split[0]).to_i) &&
+        (cnt_name = get_tag_val('DW_AT_name', line)) &&
+        (cnt_src_path = get_src_path('DW_AT_decl_file', line, cu.comp_dir))&&
+        (cnt_line_num = get_tag_val('DW_AT_decl_line', line)) &&
+        (cnt_id = cu.name + '-' + line_num.to_s)
+        cnt_ident = Ident.new(cnt_type, cnt_scope, cnt_name, cnt_src_path, cnt_line_num, cnt_id)
+        #puts cnt_ident.to_s
+        cu.add(cnt_ident)
+      end
     end
   }
   cu
@@ -241,31 +182,143 @@ end
 def build_compile_units(dumpfile)
   lines = File.readlines(dumpfile)
   $i=0
-  cus = []
+  cus = {} 
   cu_lines = []
   while $i < lines.size
     cnt_line = lines[$i]
     if cnt_line.size == 0
       next
     elsif cnt_line[0] == "\n" && cu_lines.size > 0
-      cus.push(build_compile_unit(cu_lines))
+      cu = build_compile_unit(cu_lines)
+      cus[[cu.comp_dir, cu.name].join('/')] = cu
       cu_lines = []
     elsif cnt_line[0] == '<'
       cu_lines.push(cnt_line)
     end
     $i = $i + 1
   end
-  cus.each{
-    |c|
-    puts c.to_s
+  cus
+end
+
+def mk_index_file (index_file_path, list_files)
+  mkdir(File.expand_path('..', index_file_path))
+  File.open(index_file_path, 'w+') { |f|
+    f.write("<!DOCTYPE HTML>\n")
+    f.write("<BODY>\n")
+    list_files.each { |file_name|
+      url = '.' + file_name + '.html'
+      f.write('<p>')
+      f.write('<a href="' + url + '">' + file_name + '</a>')
+      f.write("</p>\n")
+    }
+    # Make time stamp
+    f.write('Created Time: ' + File.mtime(f).to_s + '<br>')
+    # File location
+    f.write('Created WD: ' + Dir.getwd.to_s)
+    f.write("</BODY>\n")
+    f.write("</HTML>\n")
   }
 end
 
+def get_line_with_num_from_html_page(html_file, line_num)
+  File.readlines(html_file).detect{
+    |line|
+    line.start_with?(line_num.to_s)
+  }
+end
+
+def mk_html_files(old_root, new_root)
+  list_content(old_root).each { |child_path|
+    if File.file?(child_path) && is_interesting_filetype(child_path)
+      mkdir(new_root + '/' + File.expand_path('..', child_path))
+      File.open(new_root + child_path + '.html', 'w+') { |html_f|
+        n_child_path = get_file_lines(child_path)
+        File.open(child_path, 'r') { |orig_f|
+          html_f.write("<!DOCTYPE HTML>\n")
+          html_f.write("<BODY>\n")
+          html_f.write("<code>\n")
+          File.foreach(orig_f).with_index { |line, line_num|
+            line = (line_num + 1).to_s.ljust(n_child_path.to_s.length, " ") + ' ' + line
+            # order of these replacement matters
+            # amp should go first
+            line = line.gsub(/&/, '&amp;')
+            line = line.gsub(/ /, '&nbsp;')
+            line = line.gsub(/</, '&#60;')
+            line = line.gsub(/>/, '&gt;')
+            html_f.write(line + "<br>\n")
+          }
+          html_f.write("</code>\n")
+          html_f.write("</BODY>\n")
+          html_f.write("</HTML>\n")
+        }
+      }
+    else
+      mk_html_files(child_path + '/*', new_root)
+    end
+  }
+end
+
+def add_global_ident_tag(src_file_path, line_num, line, cu)
+  #print 'DEBUG: src_file_path: ',src_file_path ,' line_num: ' ,line_num, "\n"
+  ident = cu.idents.detect{|i| i.src_path == src_file_path && i.line_num == line_num }
+  if ident 
+    puts ident.name
+    line.gsub(/#{ident.name}/, '<a name = "' + ident.id + '">\0</a>')
+  else
+    line
+  end
+end
+
+# TODO: use this function to generate HTML pages
+def mk_html_pages(old_root, new_root, cus)
+  list_content(old_root).each { |child_path|
+    if File.file?(child_path) && is_interesting_filetype(child_path)
+      #make sure parent dir exists
+      mkdir(new_root + '/' + File.expand_path('..', child_path))
+      File.open(new_root + child_path + '.html', 'w+') { |html_f|
+        n_child_path = get_file_lines(child_path)
+        File.open(child_path, 'r') { |orig_f|
+          html_f.write("<!DOCTYPE HTML>\n")
+          html_f.write("<BODY>\n")
+          html_f.write("<code>\n")
+          #start decorating each line in orig_f
+          File.foreach(orig_f).with_index { |line, line_num|
+            # order of these replacement matters
+            # amp should go first
+            line = line.gsub(/&/, '&#38;')
+            line = line.gsub(/</, '&#60;')
+            line = line.gsub(/>/, '&#62;')
+            line = line.gsub(/ /, '&#160;')
+
+            if (cu = cus[orig_f.path])
+              #child_path is absolute path
+              #print 'DEBUG: child_path is ', child_path, "\n"
+              line = add_global_ident_tag(child_path, line_num + 1, line, cu)
+            end
+
+
+            line = (line_num + 1).to_s.ljust(n_child_path.to_s.length, " ") + ' ' + line
+            html_f.write(line + "<br>\n")
+          }
+          html_f.write("</code>\n")
+          html_f.write("</BODY>\n")
+          html_f.write("</HTML>\n")
+        }
+      }
+    else
+      mk_html_pages(child_path + '/*', new_root, cus)
+    end
+  }
+end
+
+
 def main
-  #dumpfile_path = generate_dumpfile(ARGV[0].to_s)
-  #p_root = get_project_root('./test/test.dump')
-  #give_name_to_global_ident('./test/test.dump')
-  build_compile_units('./test/test.dump')
+  dumpfile_path = generate_dumpfile(ARGV[0].to_s)
+  puts p_root = get_project_root(dumpfile_path)
+  cus = build_compile_units(dumpfile_path)
+  mk_html_pages(p_root, './HTML',cus)
+  mk_index_file('./HTML/index.html', list_files(p_root))
+  #print stuff out
 end
 
 if __FILE__ == $0
