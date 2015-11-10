@@ -31,7 +31,7 @@ end
 
 def get_tag_val (tag_name, str)
   m = /#{tag_name}<{1,2}([^>]*)>{1,2}/.match(str)
-  m[1].to_s if m
+  m[1].to_s.gsub(/"/, '') if m
 end
 
 def get_project_root (dumpfile)
@@ -42,7 +42,7 @@ def get_project_root (dumpfile)
   }
   raise '[ERROR] ' + dumpfile + ' size is not 1' unless res.size == 1
   # Give back the ONLY one element in set
-  res.to_a[0]
+  res.to_a[0].to_s
 end
 
 def get_file_lines (filename)
@@ -52,13 +52,16 @@ end
 
 def generate_dumpfile(binary_path)
   out_path = binary_path + '.dump'
-  cmd = 'dwarfdump -di ' + '-O file=' + out_path + ' ' + binary_path
+  cmd = 'dwarfdump -dli ' + binary_path + ' >' + out_path
   %x(#{cmd})
   out_path
 end
 
 
-class CompileUnit
+
+
+
+class DebugInfo
 
   def initialize(name='', comp_dir='', lines='')
     @type = 'DW_TAG_compile_unit'
@@ -151,15 +154,16 @@ def get_src_path(tag, line, comp_dir)
   end
 end
 
-def build_compile_unit (lines)
+def build_debug_info(lines)
   # lines is a list of line for identifiers
-  cu = CompileUnit.new
+  # all lines has been checked to have the right format
+  cu = DebugInfo.new
   lines.each_with_index { |line, line_num|
     case cu.get_ident_type(line)
     when 'DW_TAG_compile_unit'
       cnt_name = get_tag_val('DW_AT_name', line)
       cnt_comp_dir = get_tag_val('DW_AT_comp_dir', line)
-      cu = CompileUnit.new(cnt_name, cnt_comp_dir)
+      cu = DebugInfo.new(cnt_name, cnt_comp_dir)
     else
       if (cnt_type = cu.get_ident_type(line))&&
         (cnt_scope = get_tag_val('', line.split[0]).to_i) &&
@@ -176,26 +180,134 @@ def build_compile_unit (lines)
   cu
 end
 
-def build_compile_units(dumpfile)
+
+def build_debug_infos(dumpfile)
   lines = File.readlines(dumpfile)
   $i=0
-  cus = {} 
-  cu_lines = []
+  infos = {}
+  info_lines = []
   while $i < lines.size
     cnt_line = lines[$i]
     if cnt_line.size == 0
       next
-    elsif cnt_line[0] == "\n" && cu_lines.size > 0
-      cu = build_compile_unit(cu_lines)
-      cus[[cu.comp_dir, cu.name].join('/')] = cu
-      cu_lines = []
+    elsif cnt_line[0] == "\n" && info_lines.size > 0
+      info = build_debug_info(info_lines)
+      infos[[info.comp_dir, info.name].join('/')] = info
+      info_lines = []
     elsif cnt_line[0] == '<'
-      cu_lines.push(cnt_line)
+      info_lines.push(cnt_line)
     end
     $i = $i + 1
   end
-  cus
+  infos
 end
+
+
+class Scope
+  def initialize(debug_infos={}, debug_lines={})
+    @debug_infos = debug_infos
+    @debug_lines = debug_lines
+  end
+
+  def find(ident_name, src_file, line_num)
+    #ident_name: token name in src file
+    #src_file; src_file path
+    #line_num: line_num in src_file
+    #return: a link the ident_name should attach to
+  end
+end
+
+class DebugLine
+  def initialize(src_file='', line_arr=[])
+    @src_file = src_file
+    @line_arr = line_arr
+  end
+
+  def add(entry)
+    if entry.instance_of?(DebugLineEntry)
+      @line_arr.push(entry)
+    else
+      raise("[Error] cannot add to DebugLine")
+    end
+  end
+
+  def src_file
+    @src_file
+  end
+
+  def src_file=(new_src_file)
+    @src_file=new_src_file
+  end
+
+  def find_row(pc)
+    #pc: program pointer in HEX
+    #return: decimal number as line numbers
+  end
+
+  def to_s
+     [@src_file, @line_arr.size , @line_arr].join("\n")
+  end
+
+end
+
+class DebugLineEntry
+  def initialize(pc=0,row=0, col=0, uri=nil)
+    #pc is hex
+    #row is decimal
+    #cow is decimal
+    #uri is src_file
+    @pc = pc
+    @row = row
+    @col = col
+    @src_file = uri
+  end
+
+  def to_s
+    [@pc.to_s(16), @row, @col, @src_file||'nil'].join(', ')
+  end
+
+end
+
+def build_debug_line(dline_entries)
+  dl = DebugLine.new
+  dline_entries.each_with_index { |line, line_num |
+    # extract out hex, row and col number form entry
+    pc, p_row_col = line[0..9], /\[.*\]/.match(line).to_s.gsub(/(\[|\]| )/, '').strip.split(',')
+    if /uri/.match(line)
+      uri = line.split[-1].gsub(/"/, '')
+      entry = DebugLineEntry.new(pc.to_i(16), p_row_col[0].to_i, p_row_col[1].to_i, uri)
+      dl.src_file=uri
+      dl.add(entry)
+    else
+      entry = DebugLineEntry.new(pc.to_i(16), p_row_col[0].to_i, p_row_col[1].to_i)
+      dl.add(entry)
+    end
+  }
+  dl
+end
+
+def build_debug_lines(dumpfile)
+  lines = File.readlines(dumpfile)
+  $i=0
+  dlines = {}
+  dline_entries = []
+  while $i < lines.size
+    cnt_line = lines[$i]
+    if cnt_line.size == 0
+      next
+    elsif cnt_line.start_with?('0x')
+      dline_entries.push(cnt_line)
+    elsif cnt_line.start_with?("\n") && dline_entries.size > 0
+      dline = build_debug_line(dline_entries)
+      dlines[dline.src_file] = dline
+      dline_entries = []
+    else
+    end
+    $i = $i + 1
+  end
+  dlines
+end
+
 
 def mk_index_file (index_file_path, list_files)
   mkdir(File.expand_path('..', index_file_path))
@@ -217,18 +329,11 @@ def mk_index_file (index_file_path, list_files)
   }
 end
 
-def get_line_with_num_from_html_page(html_file, line_num)
-  File.readlines(html_file).detect{
-    |line|
-    line.start_with?(line_num.to_s)
-  }
-end
-
 
 def add_global_ident_tag(src_file_path, line_num, line, cu)
   #print 'DEBUG: src_file_path: ',src_file_path ,' line_num: ' ,line_num, "\n"
   ident = cu.idents.detect{|i| i.src_path == src_file_path && i.line_num == line_num }
-  if ident 
+  if ident
     line.gsub(/#{ident.name}/, '<a name = "' + ident.id + '">\0</a>')
   else
     line
@@ -263,7 +368,7 @@ def mk_html_pages(old_root, new_root, cus)
             end
 
 
-            line = (line_num + 1).to_s.ljust(n_child_path.to_s.length, " ") + ' ' + line
+            line = (line_num + 1).to_s.ljust(n_child_path.to_s.length, ' ') + ' ' + line
             html_f.write(line + "<br>\n")
           }
           html_f.write("</code>\n")
@@ -280,15 +385,22 @@ end
 
 def main
   dumpfile_path = generate_dumpfile(ARGV[0].to_s)
-  puts p_root = get_project_root(dumpfile_path)
-  cus = build_compile_units(dumpfile_path)
-  mk_html_pages(p_root, './HTML',cus)
-  mk_index_file('./HTML/index.html', list_files(p_root))
+  p_root = get_project_root(dumpfile_path)
+  puts p_root
+  debug_infos= build_debug_infos(dumpfile_path)
   #print stuff out
-  cus.values.each { |cu|
-    puts cu.to_s
+  debug_infos.values.each { |dinfo|
+    puts dinfo.to_s
     puts
   }
+  debug_lines = build_debug_lines(dumpfile_path)
+  debug_lines.values.each{ |dline|
+    puts dline.to_s
+    puts
+  }
+
+  mk_html_pages(p_root, './HTML',debug_infos)
+  mk_index_file('./HTML/index.html', list_files(p_root))
 end
 
 if __FILE__ == $0
