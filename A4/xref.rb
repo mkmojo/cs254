@@ -61,7 +61,7 @@ end
 
 def generate_dumpfile(binary_path)
   out_path = binary_path + '.dump'
-  cmd = 'dwarfdump -dli ' + binary_path + ' >' + out_path
+  cmd = 'dwarfdump -dil ' + binary_path + ' >' + out_path
   %x(#{cmd})
   out_path
 end
@@ -147,7 +147,9 @@ class Ident
   end
 
   def to_s
-    [@type_name, @scope.to_s, @name, @src_path, @line_num, @id].join(', ')
+    [@name, @scope.to_s, @type_name,
+     @src_path,
+     @line_num, @id].join(', ')
   end
 
   def Ident.get_abs_path(path, comp_dir)
@@ -353,18 +355,26 @@ def mk_index_file (index_file_path, list_files, main_url)
 end
 
 
-def add_global_ident_tag(src_file_path, line_num, line, cu)
+def add_global_ident_tag(src_file_path, line_num, line, debuginfo)
   #print 'DEBUG: src_file_path: ',src_file_path ,' line_num: ' ,line_num, "\n"
-  ident = cu.idents.detect { |i| i.src_path == src_file_path && i.line_num == line_num }
+  ident = debuginfo.idents.detect { |i| i.src_path == src_file_path && i.line_num == line_num }
   if ident
     line.gsub(/#{ident.name}/, '<a name = "' + ident.id + '" class = "' + ident.type_name + '">\0</a>')
   else
-    line
+    #current line is not the definition line
+    idents = debuginfo.idents.find_all {|i| i.scope == 1 && line.include?(i.name)}
+    if idents
+      for ident in idents
+        line = line.gsub(/#{ident.name}/, '<a href = "#' + ident.id + '">\0</a>')
+      end
+      line
+    else
+      line
+    end
   end
 end
 
-# TODO: use this function to generate HTML pages
-def mk_html_pages(old_root, new_root, cus)
+def mk_html_pages(old_root, new_root, debuginfos)
   list_content(old_root).each { |child_path|
     if File.file?(child_path) && is_interesting_filetype(child_path)
       #make sure parent dir exists
@@ -384,10 +394,8 @@ def mk_html_pages(old_root, new_root, cus)
             line = line.gsub(/>/, '&#62;')
             line = line.gsub(/ /, '&#160;')
 
-            if (cu = cus[orig_f.path])
-              #child_path is absolute path
-              #print 'DEBUG: child_path is ', child_path, "\n"
-              line = add_global_ident_tag(child_path, line_num + 1, line, cu)
+            if (dinfo = debuginfos[orig_f.path])
+              line = add_global_ident_tag(child_path, line_num + 1, line, dinfo)
             end
 
 
@@ -400,7 +408,7 @@ def mk_html_pages(old_root, new_root, cus)
         }
       }
     else
-      mk_html_pages(child_path + '/*', new_root, cus)
+      mk_html_pages(child_path + '/*', new_root, debuginfos)
     end
   }
 end
@@ -417,10 +425,10 @@ def main
     puts
   }
   debug_lines = build_debug_lines(dumpfile_path)
-  debug_lines.values.each { |dline|
-    puts dline.to_s
-    puts
-  }
+  # debug_lines.values.each { |dline|
+  #   puts dline.to_s
+  #   puts
+  # }
 
   mk_html_pages(p_root, './HTML', debug_infos)
   mk_index_file('./HTML/index.html', list_files(p_root), get_main_url(dumpfile_path))
