@@ -45,6 +45,15 @@ def get_project_root (dumpfile)
   res.to_a[0].to_s
 end
 
+def get_main_url(dump_file)
+  lines = File.readlines(dump_file)
+  line = lines.find { |line| get_tag_val('DW_AT_name', line) == 'main' }
+  if line
+    './'+get_tag_val('DW_AT_decl_file', line).split[1] + '.html'
+  else
+  end
+end
+
 def get_file_lines (filename)
   File.foreach(filename) {}
   $.
@@ -58,21 +67,26 @@ def generate_dumpfile(binary_path)
 end
 
 
-
-
-
 class DebugInfo
 
   def initialize(name='', comp_dir='', lines='')
-    @type = 'DW_TAG_compile_unit'
+    @type_name = 'DW_TAG_compile_unit'
     @name = name
     @comp_dir = comp_dir
     @idents = []
     @lines = lines
   end
 
+  def name=(new_name)
+    @name = new_name
+  end
+
   def name
     @name
+  end
+
+  def comp_dir=(new_comp_dir)
+    @comp_dir = new_comp_dir
   end
 
   def comp_dir
@@ -98,8 +112,8 @@ class DebugInfo
 end
 
 class Ident
-  def initialize(type = '', scope=-1, name='', src_path='', line_num=-1, id='')
-    @type = type
+  def initialize(type_name = '', scope=-1, name='', src_path='', line_num=-1, id='')
+    @type_name = type_name
     @scope = scope
     @name = name
     @src_path = src_path
@@ -107,8 +121,8 @@ class Ident
     @id = id
   end
 
-  def type
-    @type
+  def type_name
+    @type_name
   end
 
   def scope
@@ -118,6 +132,7 @@ class Ident
   def name
     @name
   end
+
 
   def src_path
     @src_path
@@ -132,7 +147,7 @@ class Ident
   end
 
   def to_s
-    [@type, @scope.to_s, @name, @src_path, @line_num, @id].join(', ')
+    [@type_name, @scope.to_s, @name, @src_path, @line_num, @id].join(', ')
   end
 
   def Ident.get_abs_path(path, comp_dir)
@@ -142,7 +157,6 @@ class Ident
       comp_dir + '/' + path
     end
   end
-
 end
 
 def get_src_path(tag, line, comp_dir)
@@ -157,27 +171,30 @@ end
 def build_debug_info(lines)
   # lines is a list of line for identifiers
   # all lines has been checked to have the right format
-  cu = DebugInfo.new
+  debuginfo = DebugInfo.new
   lines.each_with_index { |line, line_num|
-    case cu.get_ident_type(line)
-    when 'DW_TAG_compile_unit'
-      cnt_name = get_tag_val('DW_AT_name', line)
-      cnt_comp_dir = get_tag_val('DW_AT_comp_dir', line)
-      cu = DebugInfo.new(cnt_name, cnt_comp_dir)
-    else
-      if (cnt_type = cu.get_ident_type(line))&&
-        (cnt_scope = get_tag_val('', line.split[0]).to_i) &&
-        (cnt_name = get_tag_val('DW_AT_name', line)) &&
-        (cnt_src_path = get_src_path('DW_AT_decl_file', line, cu.comp_dir))&&
-        (cnt_line_num = get_tag_val('DW_AT_decl_line', line)) &&
-        (cnt_id = cu.name + '-' + line_num.to_s)
-        cnt_ident = Ident.new(cnt_type, cnt_scope, cnt_name, cnt_src_path, cnt_line_num, cnt_id)
-        #puts cnt_ident.to_s
-        cu.add(cnt_ident)
-      end
+    case debuginfo.get_ident_type(line)
+      when 'DW_TAG_compile_unit'
+        cnt_name = get_tag_val('DW_AT_name', line)
+        cnt_comp_dir = get_tag_val('DW_AT_comp_dir', line)
+        debuginfo.name=cnt_name
+        debuginfo.comp_dir=cnt_comp_dir
+      else
+        cnt_type = debuginfo.get_ident_type(line)
+        cnt_scope = get_tag_val('', line.split[0]).to_i
+        cnt_name = get_tag_val('DW_AT_name', line)
+        cnt_src_path = get_src_path('DW_AT_decl_file', line, debuginfo.comp_dir)
+        cnt_line_num = get_tag_val('DW_AT_decl_line', line)
+        cnt_id = debuginfo.name + '-' + line_num.to_s
+        if cnt_type && cnt_scope && cnt_name && cnt_src_path && cnt_line_num && cnt_id
+          cnt_ident = Ident.new(cnt_type, cnt_scope, cnt_name, cnt_src_path, cnt_line_num, cnt_id)
+          debuginfo.add(cnt_ident)
+        else
+
+        end
     end
   }
-  cu
+  debuginfo
 end
 
 
@@ -217,6 +234,10 @@ class Scope
   end
 end
 
+def build_scope(debug_infos, debug_lines)
+  scope = Scope.new(debug_infos, debug_lines)
+end
+
 class DebugLine
   def initialize(src_file='', line_arr=[])
     @src_file = src_file
@@ -227,7 +248,7 @@ class DebugLine
     if entry.instance_of?(DebugLineEntry)
       @line_arr.push(entry)
     else
-      raise("[Error] cannot add to DebugLine")
+      raise('[Error] cannot add to DebugLine')
     end
   end
 
@@ -245,13 +266,13 @@ class DebugLine
   end
 
   def to_s
-     [@src_file, @line_arr.size , @line_arr].join("\n")
+    [@src_file, @line_arr.size, @line_arr].join("\n")
   end
 
 end
 
 class DebugLineEntry
-  def initialize(pc=0,row=0, col=0, uri=nil)
+  def initialize(pc=0, row=0, col=0, uri=nil)
     #pc is hex
     #row is decimal
     #cow is decimal
@@ -270,7 +291,7 @@ end
 
 def build_debug_line(dline_entries)
   dl = DebugLine.new
-  dline_entries.each_with_index { |line, line_num |
+  dline_entries.each_with_index { |line|
     # extract out hex, row and col number form entry
     pc, p_row_col = line[0..9], /\[.*\]/.match(line).to_s.gsub(/(\[|\]| )/, '').strip.split(',')
     if /uri/.match(line)
@@ -309,7 +330,7 @@ def build_debug_lines(dumpfile)
 end
 
 
-def mk_index_file (index_file_path, list_files)
+def mk_index_file (index_file_path, list_files, main_url)
   mkdir(File.expand_path('..', index_file_path))
   File.open(index_file_path, 'w+') { |f|
     f.write("<!DOCTYPE HTML>\n")
@@ -320,6 +341,8 @@ def mk_index_file (index_file_path, list_files)
       f.write('<a href="' + url + '">' + file_name + '</a>')
       f.write("</p>\n")
     }
+    # Add special link to main
+    f.write('<p><a href="' + main_url + '">' + 'main' + '</a></p><br>')
     # Make time stamp
     f.write('Created Time: ' + File.mtime(f).to_s + '<br>')
     # File location
@@ -332,9 +355,9 @@ end
 
 def add_global_ident_tag(src_file_path, line_num, line, cu)
   #print 'DEBUG: src_file_path: ',src_file_path ,' line_num: ' ,line_num, "\n"
-  ident = cu.idents.detect{|i| i.src_path == src_file_path && i.line_num == line_num }
+  ident = cu.idents.detect { |i| i.src_path == src_file_path && i.line_num == line_num }
   if ident
-    line.gsub(/#{ident.name}/, '<a name = "' + ident.id + '">\0</a>')
+    line.gsub(/#{ident.name}/, '<a name = "' + ident.id + '" class = "' + ident.type_name + '">\0</a>')
   else
     line
   end
@@ -394,13 +417,13 @@ def main
     puts
   }
   debug_lines = build_debug_lines(dumpfile_path)
-  debug_lines.values.each{ |dline|
+  debug_lines.values.each { |dline|
     puts dline.to_s
     puts
   }
 
-  mk_html_pages(p_root, './HTML',debug_infos)
-  mk_index_file('./HTML/index.html', list_files(p_root))
+  mk_html_pages(p_root, './HTML', debug_infos)
+  mk_index_file('./HTML/index.html', list_files(p_root), get_main_url(dumpfile_path))
 end
 
 if __FILE__ == $0
