@@ -4,7 +4,8 @@ project ( Assignment5 C CXX )
 # include directories
 include_directories( include )
 
-# add test
+# add implementation
 add_subdirectory(src)
-add_subdirectory(test)
 
+# add test
+add_subdirectory(test)
