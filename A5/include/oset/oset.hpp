@@ -190,12 +190,19 @@ public:
     }
 
     // Set difference.
-    //
-    // *** THIS CODE HAS COST O(N^2).  IT SHOULD BE O(N).
-    //
     oset& operator-=(oset& other) {
-        for (iter i = other.begin(); i != other.end(); ++i) {
-            operator-=(*i);
+        if(other.begin() == other.end()) return *this;
+        if(this->begin() == this->end()) return *this;
+
+        node* p = find_prev(*(other.begin()));
+        for(iter it = other.begin(); it != other.end(); it++){
+            if(p->next && *it == p->next->val){
+                node* p_nxt = p->next;
+                p->next = p_nxt->next;
+                delete p_nxt;
+            }
+            while(p->next && p->next->val >= *it)
+                p = p->next;
         }
         return *this;
     }
