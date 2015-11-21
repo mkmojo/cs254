@@ -1,15 +1,12 @@
-cmake_minimum_required (VERSION 2.8.8)
-project (Assignment5)
+cmake_minimum_required (VERSION 3.3)
+project ( Assignment5 C CXX )
 
 # include directories
 include_directories( include )
 
-# add sources
-file(GLOB SOURCES "src/*.cpp")
-add_executable(main ${SOURCES})
 
 # add test
-add_subdirectory(lib/gtest-1.7.0)
+add_subdirectory(src)
 add_subdirectory(test)
 
 # add the install targets
