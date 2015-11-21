@@ -1,3 +1,6 @@
+#ifndef OSET_HPP_
+#define OSET_HPP_
+
 #include <iostream>
 using std::cout;
 using std::endl;
@@ -212,3 +215,4 @@ void print(oset& OS) {
     cout << endl;
 }
 
+#endif
