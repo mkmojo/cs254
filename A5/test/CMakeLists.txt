@@ -1,4 +1,4 @@
-#set(gtest_SOURCE_DIR "${PROJECT_SOURCE_DIR}/lib/gtest-1.7.0")
+add_subdirectory(gtest-1.7.0)
 enable_testing()
 include_directories(${gtest_SOURCE_DIR}/include)
 
