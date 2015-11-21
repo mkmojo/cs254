@@ -1,7 +1,7 @@
-##How to use code:
+##How to use:
 
 ###Compile the project 
-    mkdir release && cd release && cmake .. && make
+    mkdir build && cd build && cmake ..
+    make install
 ###Run the project
-
-I have decided to use this project as a practice for using cmake.
+    cd $PROJECT_SOURCE_DIR && ./bin/main
