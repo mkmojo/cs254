@@ -4,17 +4,13 @@ project (Assignment5)
 # include directories
 include_directories( include )
 
-# use library
-# include_directories ( "${PROJECT_SOURCE_DIR}/lib" )
-# add_subdirectory (lib)
-
 # add sources
 file(GLOB SOURCES "src/*.cpp")
-
 add_executable(main ${SOURCES})
 
-# add the executable
-# target_link_libraries (main Oset) 
+# add test
+add_subdirectory(lib/gtest-1.7.0)
+add_subdirectory(test)
 
 # add the install targets
 install ( TARGETS main DESTINATION "${PROJECT_SOURCE_DIR}/bin" )
