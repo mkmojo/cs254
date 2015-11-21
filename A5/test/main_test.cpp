@@ -66,6 +66,44 @@ TEST_F(OsetTest, UnionEmpty){
     }
 }
 
+TEST_F(OsetTest, DifferenceTest){
+    vector<int> vu = {2, 6, 10};
+    vector<int> vv = {6, 7};
+    vector<int> vres = {2, 10};
+    oset osu, osv, ores;
+    for(auto &&it:vu) osu += it;
+    for(auto &&it:vv) osv += it;
+    for(auto &&it:vres) ores += it;
+
+    //diff osu with osv
+    osu -= osv;
+
+    int i = 0;
+    for(auto it = ores.begin(); it != ores.end(); it++){
+        EXPECT_EQ(*it, vres[i]);
+        ++i;
+    }
+}
+
+TEST_F(OsetTest, DifferenceEmpty){
+    vector<int> vu = {2, 6, 10};
+    vector<int> vv = {};
+    vector<int> vres = {2,6, 10};
+    oset osu, osv, ores;
+    for(auto &&it:vu) osu += it;
+    for(auto &&it:vv) osv += it;
+    for(auto &&it:vres) ores += it;
+
+    //diff osu with osv
+    osu -= osv;
+
+    int i = 0;
+    for(auto it = ores.begin(); it != ores.end(); it++){
+        EXPECT_EQ(*it, vres[i]);
+        ++i;
+    }
+}
+
 int main(int argc, char* argv[]){
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
