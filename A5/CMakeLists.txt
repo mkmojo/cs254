@@ -1,10 +1,10 @@
 cmake_minimum_required (VERSION 3.3)
 project ( Assignment5 C CXX )
 
-# include directories
+# include headers
 include_directories( include )
 
-# add implementation
+# add implementations
 add_subdirectory(src)
 
 # add test
