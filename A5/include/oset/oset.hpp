@@ -200,13 +200,15 @@ public:
 
         node* p = find_prev(*(other.begin()));
         for(iter it = other.begin(); it != other.end(); it++){
-            if(p->next && *it == p->next->val){
+            while(p->next && p->next->val < *it)
+                p = p->next;
+            if(p->next == NULL){
+                return *this;
+            } else if(p->next && *it == p->next->val){
                 node* p_nxt = p->next;
                 p->next = p_nxt->next;
                 delete p_nxt;
             }
-            while(p->next && p->next->val >= *it)
-                p = p->next;
         }
         return *this;
     }
