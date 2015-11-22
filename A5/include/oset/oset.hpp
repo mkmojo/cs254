@@ -11,6 +11,7 @@ class oset {
      public:
         const T val;
         node *next;
+        node() : val(), next(NULL) {}
         node(T v) : val(v), next(NULL) { }
     };
     node head;
@@ -66,17 +67,17 @@ class oset {
     // Constructors and destructor
 
     // new empty set:
-    oset() : head(0), beyond(0), start(&head), finish(&beyond) {
+    oset() :  start(&head), finish(&beyond) {
         head.next = NULL;
     }
 
     // new singleton set:
-    oset(T v) : head(0), beyond(0), start(&head), finish(&beyond) {
+    oset(T v) :  start(&head), finish(&beyond) {
         head.next = new node(v);
     }
 
     // copy constructor:
-    oset(oset& other) : head(0), beyond(0), start(&head), finish(&beyond) {
+    oset(oset& other) : start(&head), finish(&beyond) {
         node *o = other.head.next;
         node *n = &head;
         while (o) {
@@ -218,7 +219,7 @@ public:
         if(this->begin() == this->end()) return *this;
         node *ans, *q;
         //dummy node for ans array
-        q = ans = new node(0);
+        q = ans = new node;
 
         node* p = find_prev(*(other.begin()));
         for(iter it = other.begin(); it != other.end(); it++){
