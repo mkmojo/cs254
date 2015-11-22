@@ -214,17 +214,28 @@ public:
     }
 
     // Intersection.
-    //
-    // *** THIS CODE HAS COST O(N^2).  IT SHOULD BE O(N).
-    //
     oset& operator*=(oset& other) {
-        oset temp;      // empty
-        for (iter i = begin(); i != end(); ++i) {
-            if (other[*i]) temp+=(*i);
+        if(other.begin() == other.end()) {
+            clear();
+            return *this;
+        }
+        if(this->begin() == this->end()) return *this;
+        node *ans, *q;
+        //dummy node for ans array
+        q = ans = new node(0);
+
+        node* p = find_prev(*(other.begin()));
+        for(iter it = other.begin(); it != other.end(); it++){
+            while(p->next && p->next->val < *it)
+                p = p->next;
+            if(p->next && *it == p->next->val){
+                q->next = new node(*it);
+                q = q->next;
+            }
         }
         clear();
-        operator+=(temp);   // union
-        // NB: temp is destructed as we leave this scope
+        (&head)->next = ans->next;
+        delete ans;
         return *this;
     }
 };
