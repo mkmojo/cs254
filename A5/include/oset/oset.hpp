@@ -168,7 +168,8 @@ public:
     // Union.
     oset& operator+=(oset& other) {
         if(other.begin() == other.end()) return *this;
-        if(this->begin() == this->end()) return other;
+        //qqiu 11/22/2015: why I cannot return other as the new reference?
+        //if(this->begin() == this->end()) return other;
         node* p = find_prev(*(other.begin()));
         for(iter it = other.begin(); it != other.end(); it++){
             // go to the next node whose val < *it
