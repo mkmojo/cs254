@@ -176,15 +176,19 @@ public:
         if(this->begin() == this->end()) return other;
         node* p = find_prev(*(other.begin()));
         for(iter it = other.begin(); it != other.end(); it++){
-            if(p->next && *it != p->next->val){
+            // go to the next node whose val < *it
+            while(p->next && p->next->val < *it)
+                p = p->next;
+
+            if(p->next == NULL && it != other.end()){
+                node* new_node = new node(*it);
+                p->next = new_node;
+            } else if(p->next && p->next->val > *it){
                 node* p_nxt = p->next;
                 node* new_node = new node(*it);
                 p->next = new_node;
                 new_node->next=p_nxt;
-                p = p_nxt;
             }
-            while(p->next && p->next->val >= *it)
-                p = p->next;
         }
         return *this;
     }
