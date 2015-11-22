@@ -10,7 +10,7 @@ using std::endl;
 
 class OsetTest : public ::testing::Test {
     protected:
-        oset os;
+        oset<int> os;
         void virtual SetUp(){}
         void virtual TearDown(){}
 };
@@ -32,7 +32,7 @@ TEST_F(OsetTest, UnionTest){
     vector<int> vu = {2, 6, 10, 30};
     vector<int> vv = {6, 7, 15, 20, 30};
     vector<int> vres = {2, 6, 7, 10, 15, 20, 30};
-    oset osu, osv;
+    oset<int> osu, osv;
     for(auto &&it:vu) osu += it;
     for(auto &&it:vv) osv += it;
 
@@ -51,7 +51,7 @@ TEST_F(OsetTest, UnionEmpty){
     vector<int> vu = {};
     vector<int> vv = {2, 6, 10};
     vector<int> vres = {2, 6, 10};
-    oset osu, osv, ores;
+    oset<int> osu, osv, ores;
     for(auto &&it:vu) osu += it;
     for(auto &&it:vv) osv += it;
 
@@ -69,7 +69,7 @@ TEST_F(OsetTest, DifferenceTest){
     vector<int> vu = {2, 6, 10};
     vector<int> vv = {6, 7, 10};
     vector<int> vres = {2};
-    oset osu, osv;
+    oset<int> osu, osv;
     for(auto &&it:vu) osu += it;
     for(auto &&it:vv) osv += it;
 
@@ -90,7 +90,7 @@ TEST_F(OsetTest, DifferenceEmpty){
     vector<int> vu = {2,6,10};
     vector<int> vv = {};
     vector<int> vres = {2,6,10};
-    oset osu, osv;
+    oset<int> osu, osv;
     for(auto &&it:vu) osu += it;
     for(auto &&it:vv) osv += it;
 
@@ -108,7 +108,7 @@ TEST_F(OsetTest, IntersectionTest){
     vector<int> vu = {2,7,10,15};
     vector<int> vv = {4,7,10,20};
     vector<int> vres = {7,10};
-    oset osu, osv;
+    oset<int> osu, osv;
     for(auto &&it:vu) osu += it;
     for(auto &&it:vv) osv += it;
 
@@ -127,12 +127,12 @@ TEST_F(OsetTest, IntersectionEmpty){
     vector<int> vu = {3, 4};
     vector<int> vv = {};
     vector<int> vres = {};
-    oset osu, osv;
+    oset<int> osu, osv;
     for(auto &&it:vu) osu += it;
     for(auto &&it:vv) osv += it;
 
     osu *= osv;
-    print(osu);
+    //print(osu);
 
     int i = 0;
     for(auto it = osu.begin(); it != osu.end(); it++){
