@@ -5,20 +5,13 @@
 using std::cout;
 using std::endl;
 
-class oset;
-void print(oset& OS);       // for debugging
-
-// Non-generic starter code.
-//
-// *** THIS SKELETON ENVISIONS INTEGER ELEMENTS.
-// *** YOUR VERSION SHOULD BE POLYMORPHIC.
-//
+template<typename T>
 class oset {
     class node {
      public:
-        const int val;
+        const T val;
         node *next;
-        node(int v) : val(v), next(NULL) { }
+        node(T v) : val(v), next(NULL) { }
     };
     node head;
         // NB: _not_ node*.  There's a dummy node here, with garbage val;
@@ -35,9 +28,10 @@ class oset {
         node *pos;          // node _before_ the one with this->operator*
         // constructor is private:
         iter(node* n) : pos(n) { }
+        //qqiu 11/22/2015: should I have this template parameter <T>?
     friend class oset;      // so oset can call the (private) constructor
     public:   
-        const int& operator*() {
+        const T& operator*() {
             return pos->next->val;
         }
         // support forward iteration.  This is prefix version (++p).
@@ -77,7 +71,7 @@ class oset {
     }
 
     // new singleton set:
-    oset(int v) : head(0), beyond(0), start(&head), finish(&beyond) {
+    oset(T v) : head(0), beyond(0), start(&head), finish(&beyond) {
         head.next = new node(v);
     }
 
@@ -125,7 +119,7 @@ private:
     // *** ELEMENT TYPE.  YOU NEED TO MAKE THAT EXPLICIT
     // *** (IN DIFFERENT WAYS IN DIFFERENT VERSIONS OF THE CODE).
     //
-    node* find_prev(const int v) {
+    node* find_prev(const T v) {
         node* p = &head;
         while (true) {
             if (p->next == NULL) return p;
@@ -136,13 +130,13 @@ private:
         
 public:
     // find -- return true iff present:
-    bool operator[](const int v) {
+    bool operator[](const T v) {
         node* p = find_prev(v);
         return (p->next != NULL && p->next->val == v);
     }
 
     // insert v if not already present; return ref to self
-    oset& operator+=(const int v) {
+    oset& operator+=(const T v) {
         node* p = find_prev(v);
         if (p->next == NULL || p->next->val != v) {
             node* n = new node(v);
@@ -153,7 +147,7 @@ public:
     }
 
     // remove v if present; return ref to self
-    oset& operator-=(const int v) {
+    oset& operator-=(const T v) {
         node* p = find_prev(v);
         node* t;
         if ((t = p->next) != NULL && p->next->val == v) {
@@ -163,6 +157,7 @@ public:
         }
         return *this;
     }
+
 
     //--------------------------------------
     // Union, intersection and difference.
@@ -240,8 +235,10 @@ public:
     }
 };
 
-void print(oset& OS) {
-    for (oset::iter i = OS.begin(); i != OS.end(); ++i) {
+template<typename T>
+void print(oset<T>& OS) {
+    using iter = typename oset<T>::iter;
+    for (iter i = OS.begin(); i != OS.end(); ++i) {
         cout << *i << " ";
     }
     cout << endl;
