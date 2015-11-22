@@ -67,20 +67,23 @@ TEST_F(OsetTest, UnionEmpty){
 
 TEST_F(OsetTest, DifferenceTest){
     vector<int> vu = {2, 6, 10};
-    vector<int> vv = {6, 7};
-    vector<int> vres = {2, 10};
+    vector<int> vv = {6, 7, 10};
+    vector<int> vres = {2};
     oset osu, osv;
     for(auto &&it:vu) osu += it;
     for(auto &&it:vv) osv += it;
 
     //diff osu with osv
     osu -= osv;
+    //print(osu);
 
     int i = 0;
-    for(auto it = osu.begin(); it != osu.end(); it++){
+    for(auto it = osu.begin(); it != osu.end() ; it++){
         EXPECT_EQ(*it, vres[i]);
         ++i;
     }
+
+    ASSERT_EQ(i, vres.size());
 }
 
 TEST_F(OsetTest, DifferenceEmpty){
