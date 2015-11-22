@@ -48,7 +48,7 @@ TEST_F(OsetTest, UnionTest){
 }
 
 TEST_F(OsetTest, UnionEmpty){
-    vector<int> vu;
+    vector<int> vu = {};
     vector<int> vv = {2, 6, 10};
     vector<int> vres = {2, 6, 10};
     oset osu, osv, ores;
@@ -90,7 +90,7 @@ TEST_F(OsetTest, DifferenceEmpty){
     vector<int> vu = {2,6,10};
     vector<int> vv = {};
     vector<int> vres = {2,6,10};
-    oset osu, osv, ores;
+    oset osu, osv;
     for(auto &&it:vu) osu += it;
     for(auto &&it:vv) osv += it;
 
@@ -98,7 +98,44 @@ TEST_F(OsetTest, DifferenceEmpty){
     osu -= osv;
 
     int i = 0;
-    for(auto it = ores.begin(); it != ores.end(); it++){
+    for(auto it = osu.begin(); it != osu.end(); it++){
+        EXPECT_EQ(*it, vres[i]);
+        ++i;
+    }
+}
+
+TEST_F(OsetTest, IntersectionTest){
+    vector<int> vu = {2,7,10,15};
+    vector<int> vv = {4,7,10,20};
+    vector<int> vres = {7,10};
+    oset osu, osv;
+    for(auto &&it:vu) osu += it;
+    for(auto &&it:vv) osv += it;
+
+    osu *= osv;
+
+    int i = 0;
+    for(auto it = osu.begin(); it != osu.end(); it++){
+        EXPECT_EQ(*it, vres[i]);
+        ++i;
+    }
+
+    ASSERT_EQ(i, vres.size());
+}
+
+TEST_F(OsetTest, IntersectionEmpty){
+    vector<int> vu = {3, 4};
+    vector<int> vv = {};
+    vector<int> vres = {};
+    oset osu, osv;
+    for(auto &&it:vu) osu += it;
+    for(auto &&it:vv) osv += it;
+
+    osu *= osv;
+    print(osu);
+
+    int i = 0;
+    for(auto it = osu.begin(); it != osu.end(); it++){
         EXPECT_EQ(*it, vres[i]);
         ++i;
     }
