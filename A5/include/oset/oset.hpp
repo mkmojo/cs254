@@ -171,23 +171,44 @@ public:
     // (as illustrated in the code for intersection below).
 
     // Union.
-    //
-    // *** THIS CODE HAS COST O(N^2).  IT SHOULD BE O(N).
-    //
     oset& operator+=(oset& other) {
-        for (iter i = other.begin(); i != other.end(); ++i) {
-            operator+=(*i);
+        if(other.begin() == other.end()) return *this;
+        if(this->begin() == this->end()) return other;
+        node* p = find_prev(*(other.begin()));
+        for(iter it = other.begin(); it != other.end(); it++){
+            // go to the next node whose val < *it
+            while(p->next && p->next->val < *it)
+                p = p->next;
+
+            if(p->next == NULL && it != other.end()){
+                node* new_node = new node(*it);
+                p->next = new_node;
+            } else if(p->next && p->next->val > *it){
+                node* p_nxt = p->next;
+                node* new_node = new node(*it);
+                p->next = new_node;
+                new_node->next=p_nxt;
+            }
         }
         return *this;
     }
 
     // Set difference.
-    //
-    // *** THIS CODE HAS COST O(N^2).  IT SHOULD BE O(N).
-    //
     oset& operator-=(oset& other) {
-        for (iter i = other.begin(); i != other.end(); ++i) {
-            operator-=(*i);
+        if(other.begin() == other.end()) return *this;
+        if(this->begin() == this->end()) return *this;
+
+        node* p = find_prev(*(other.begin()));
+        for(iter it = other.begin(); it != other.end(); it++){
+            while(p->next && p->next->val < *it)
+                p = p->next;
+            if(p->next == NULL){
+                return *this;
+            } else if(p->next && *it == p->next->val){
+                node* p_nxt = p->next;
+                p->next = p_nxt->next;
+                delete p_nxt;
+            }
         }
         return *this;
     }
