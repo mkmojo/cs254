@@ -29,22 +29,22 @@ TEST_F(OsetTest, InsertWithOrder){
 }
 
 TEST_F(OsetTest, UnionTest){
-    vector<int> vu = {2, 6, 10};
-    vector<int> vv = {6, 7};
-    vector<int> vres = {2, 6, 7, 10};
-    oset osu, osv, ores;
+    vector<int> vu = {2, 6, 10, 30};
+    vector<int> vv = {6, 7, 15, 20, 30};
+    vector<int> vres = {2, 6, 7, 10, 15, 20, 30};
+    oset osu, osv;
     for(auto &&it:vu) osu += it;
     for(auto &&it:vv) osv += it;
-    for(auto &&it:vres) ores += it;
 
     //union osu with osv
     osu += osv;
-
+    //print(osu);
     int i = 0;
-    for(auto it = ores.begin(); it != ores.end(); it++){
-        EXPECT_EQ(*it, vres[i]);
+    for(auto it = osu.begin(); it != osu.end(); it++){
+        EXPECT_EQ(vres[i], *it);
         ++i;
     }
+    ASSERT_EQ(i, vres.size());
 }
 
 TEST_F(OsetTest, UnionEmpty){
@@ -54,13 +54,12 @@ TEST_F(OsetTest, UnionEmpty){
     oset osu, osv, ores;
     for(auto &&it:vu) osu += it;
     for(auto &&it:vv) osv += it;
-    for(auto &&it:vres) ores += it;
 
     //union osu with osv
     osu += osv;
 
     int i = 0;
-    for(auto it = ores.begin(); it != ores.end(); it++){
+    for(auto it = osu.begin(); it != osu.end(); it++){
         EXPECT_EQ(*it, vres[i]);
         ++i;
     }
@@ -70,29 +69,27 @@ TEST_F(OsetTest, DifferenceTest){
     vector<int> vu = {2, 6, 10};
     vector<int> vv = {6, 7};
     vector<int> vres = {2, 10};
-    oset osu, osv, ores;
+    oset osu, osv;
     for(auto &&it:vu) osu += it;
     for(auto &&it:vv) osv += it;
-    for(auto &&it:vres) ores += it;
 
     //diff osu with osv
     osu -= osv;
 
     int i = 0;
-    for(auto it = ores.begin(); it != ores.end(); it++){
+    for(auto it = osu.begin(); it != osu.end(); it++){
         EXPECT_EQ(*it, vres[i]);
         ++i;
     }
 }
 
 TEST_F(OsetTest, DifferenceEmpty){
-    vector<int> vu = {2, 6, 10};
+    vector<int> vu = {2,6,10};
     vector<int> vv = {};
-    vector<int> vres = {2,6, 10};
+    vector<int> vres = {2,6,10};
     oset osu, osv, ores;
     for(auto &&it:vu) osu += it;
     for(auto &&it:vv) osv += it;
-    for(auto &&it:vres) ores += it;
 
     //diff osu with osv
     osu -= osv;
