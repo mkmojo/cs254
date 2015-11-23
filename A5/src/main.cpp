@@ -4,10 +4,16 @@ using std::cout;
 using std::endl;
 using std::flush;
 
+template<typename T>
+bool ge(const T& a, const T& b){
+    return a>=b;
+}
+
+
 int main() {
     // Some simple testing code.  You'll need a lot more.
 
-    oset<int> S;     // empty set
+    oset<int> S(ge<int>);     // empty set
     S += 3;     // now should contain 3
 
     cout << S[3] << " ";            // should print 1 (true) : 3 is in S
@@ -18,7 +24,7 @@ int main() {
     print(S);                       // should print 3 5 7
 
     oset<int> T(3);                      // singleton
-    print(T);                       // should print 3
+    print(T);              // should print 3
 
     oset<int> U(S);                      // copy of S
     oset<int> V(S);                      // copy of S

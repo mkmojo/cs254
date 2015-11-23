@@ -2,8 +2,10 @@
 #define OSET_HPP_
 
 #include <iostream>
+#include <functional>
 using std::cout;
 using std::endl;
+using std::function;
 
 template<typename T>
 class oset {
@@ -55,6 +57,8 @@ class oset {
     iter start;         // initialized in the constructors below
     iter finish;        // initialized in the constructors below
 
+    function<bool(const T&, const T&)> cmp_op;
+
  public:
     iter begin() {
         return start;
@@ -65,19 +69,25 @@ class oset {
 
     //--------------------------------------
     // Constructors and destructor
+    static bool default_ge(const T& a, const T& b){
+        return a >= b;
+    }
 
     // new empty set:
-    oset() :  start(&head), finish(&beyond) {
+    oset(function<bool(const T&, const T&)> ge=oset::default_ge)
+        :  start(&head), finish(&beyond), cmp_op(ge) {
         head.next = NULL;
     }
 
     // new singleton set:
-    oset(T v) :  start(&head), finish(&beyond) {
+    oset(T v, function<bool(const T&, const T&)> ge=oset::default_ge)
+        :  start(&head), finish(&beyond), cmp_op(ge){
         head.next = new node(v);
     }
 
     // copy constructor:
-    oset(oset& other) : start(&head), finish(&beyond) {
+    oset(oset& other, function<bool(const T&, const T&)> ge=oset::default_ge)
+        : start(&head), finish(&beyond), cmp_op(ge){
         node *o = other.head.next;
         node *n = &head;
         while (o) {
@@ -124,7 +134,7 @@ private:
         node* p = &head;
         while (true) {
             if (p->next == NULL) return p;
-            if (p->next->val >= v) return p;
+            if (cmp_op(p->next->val, v)) return p;
             p = p->next;
         }
     }
@@ -236,6 +246,7 @@ public:
         return *this;
     }
 };
+
 
 template<typename T>
 void print(oset<T>& OS) {
