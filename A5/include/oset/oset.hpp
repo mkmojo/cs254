@@ -57,7 +57,7 @@ class oset {
     iter start;         // initialized in the constructors below
     iter finish;        // initialized in the constructors below
 
-    function<bool(const T&, const T&)> cmp_op;
+    function<bool(const T&, const T&)> ge;
 
  public:
     iter begin() {
@@ -73,21 +73,29 @@ class oset {
         return a >= b;
     }
 
+    bool default_eq(const T& a, const T&b){
+        return default_ge(a, b) && default_ge(b, a);
+    }
+
+    bool eq(const T& a, const T& b){
+        return ge(a, b) && ge(b, a);
+    }
+
     // new empty set:
-    oset(function<bool(const T&, const T&)> ge=oset::default_ge)
-        :  start(&head), finish(&beyond), cmp_op(ge) {
+    oset(function<bool(const T&, const T&)> op_ge=oset::default_ge)
+        :  start(&head), finish(&beyond), ge(op_ge) {
         head.next = NULL;
     }
 
     // new singleton set:
-    oset(T v, function<bool(const T&, const T&)> ge=oset::default_ge)
-        :  start(&head), finish(&beyond), cmp_op(ge){
+    oset(T v, function<bool(const T&, const T&)> op_ge=oset::default_ge)
+        :  start(&head), finish(&beyond), ge(op_ge){
         head.next = new node(v);
     }
 
     // copy constructor:
-    oset(oset& other, function<bool(const T&, const T&)> ge=oset::default_ge)
-        : start(&head), finish(&beyond), cmp_op(ge){
+    oset(oset& other, function<bool(const T&, const T&)> op_ge=oset::default_ge)
+        : start(&head), finish(&beyond), ge(op_ge){
         node *o = other.head.next;
         node *n = &head;
         while (o) {
@@ -134,7 +142,7 @@ private:
         node* p = &head;
         while (true) {
             if (p->next == NULL) return p;
-            if (cmp_op(p->next->val, v)) return p;
+            if (ge(p->next->val, v)) return p;
             p = p->next;
         }
     }
@@ -184,13 +192,14 @@ public:
         node* p = find_prev(*(other.begin()));
         for(iter it = other.begin(); it != other.end(); it++){
             // go to the next node whose val < *it
-            while(p->next && p->next->val < *it)
+            while(p->next && (!ge(p->next->val, *it))){
                 p = p->next;
+            }
 
             if(p->next == NULL && it != other.end()){
                 node* new_node = new node(*it);
                 p->next = new_node;
-            } else if(p->next && p->next->val > *it){
+            } else if(p->next && (ge(p->next->val, *it) && !eq(p->next->val, *it) )){
                 node* p_nxt = p->next;
                 node* new_node = new node(*it);
                 p->next = new_node;
@@ -207,11 +216,11 @@ public:
 
         node* p = find_prev(*(other.begin()));
         for(iter it = other.begin(); it != other.end(); it++){
-            while(p->next && p->next->val < *it)
+            while(p->next && !ge(p->next->val, *it))
                 p = p->next;
             if(p->next == NULL){
                 return *this;
-            } else if(p->next && *it == p->next->val){
+            } else if(p->next && eq(*it, p->next->val)){
                 node* p_nxt = p->next;
                 p->next = p_nxt->next;
                 delete p_nxt;
@@ -233,9 +242,9 @@ public:
 
         node* p = find_prev(*(other.begin()));
         for(iter it = other.begin(); it != other.end(); it++){
-            while(p->next && p->next->val < *it)
+            while(p->next && !ge(p->next->val, *it))
                 p = p->next;
-            if(p->next && *it == p->next->val){
+            if(p->next && eq(*it, p->next->val)){
                 q->next = new node(*it);
                 q = q->next;
             }

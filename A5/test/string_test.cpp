@@ -1,12 +1,23 @@
 #include "gtest/gtest.h"
-#include "oset/oset.hpp"
+#include "oset/oset.hpp" // to be tested
 #include <vector>
 #include <iostream>
 #include <string>
+#include <ctype.h>
 using std::vector;
 using std::string;
 using std::cout;
 using std::endl;
+
+bool str_insensitive_ge(const string & a, const string & b){
+    for(int i=0;i<a.size() && i<b.size();i++){
+        char ca = tolower(a[i]);
+        char cb = tolower(b[i]);
+        if(ca < cb) return false;
+    }
+    if(a.size() < b.size()) return false;
+    return true;
+}
 
 class StringTest : public ::testing::Test {
     protected:
@@ -16,7 +27,7 @@ class StringTest : public ::testing::Test {
 };
 
 TEST_F(StringTest, InsertWithOrder){
-    vector<string> s_init = {"a", "b", "c", "a"};
+    vector<string> s_init = {"a", "b", "a", "c"};
     for(auto &&it:s_init) os += it;
 
     vector<string> s_res = {"a", "b", "c"};
@@ -29,16 +40,15 @@ TEST_F(StringTest, InsertWithOrder){
 }
 
 TEST_F(StringTest, UnionTest){
-    vector<string> vu = {"a", "h", "mm", "zz"};
-    vector<string> vv = {"e", "f", "mm", "pp", "zz"};
-    vector<string> vres = {"a", "e", "f", "h", "mm", "pp", "zz"};
-    oset<string> osu, osv;
+    vector<string> vu = {"a", "h", "MM", "zz"};
+    vector<string> vv = {"e", "f", "MM", "pp", "zz"};
+    vector<string> vres = {"a", "e", "f", "h", "MM", "pp", "zz"};
+    oset<string> osu(str_insensitive_ge), osv(str_insensitive_ge);
     for(auto &&it:vu) osu += it;
     for(auto &&it:vv) osv += it;
 
     //union osu with osv
     osu += osv;
-    //print(osu);
     int i = 0;
     for(auto it = osu.begin(); it != osu.end(); it++){
         EXPECT_EQ(vres[i], *it);
@@ -49,9 +59,9 @@ TEST_F(StringTest, UnionTest){
 
 TEST_F(StringTest, UnionEmpty){
     vector<string> vu = {};
-    vector<string> vv = {"b", "f", "h"};
-    vector<string> vres = {"b", "f", "h"};
-    oset<string> osu, osv, ores;
+    vector<string> vv = {"b", "F", "h"};
+    vector<string> vres = {"b", "F", "h"};
+    oset<string> osu(str_insensitive_ge), osv(str_insensitive_ge), ores;
     for(auto &&it:vu) osu += it;
     for(auto &&it:vv) osv += it;
 
