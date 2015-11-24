@@ -57,7 +57,7 @@ class oset {
     iter start;         // initialized in the constructors below
     iter finish;        // initialized in the constructors below
 
-    function<bool(const T&, const T&)> ge;
+    bool(*ge)(const T&, const T&);
 
  public:
     iter begin() {
@@ -82,19 +82,19 @@ class oset {
     }
 
     // new empty set:
-    oset(function<bool(const T&, const T&)> op_ge=oset::default_ge)
+    oset( bool(*op_ge)(const T&, const T&)=oset::default_ge)
         :  start(&head), finish(&beyond), ge(op_ge) {
         head.next = NULL;
     }
 
     // new singleton set:
-    oset(T v, function<bool(const T&, const T&)> op_ge=oset::default_ge)
+    oset(T v, bool(*op_ge)(const T&, const T&)=oset::default_ge)
         :  start(&head), finish(&beyond), ge(op_ge){
         head.next = new node(v);
     }
 
     // copy constructor:
-    oset(oset& other, function<bool(const T&, const T&)> op_ge=oset::default_ge)
+    oset(oset& other, bool(*op_ge)(const T&, const T&)=oset::default_ge)
         : start(&head), finish(&beyond), ge(op_ge){
         node *o = other.head.next;
         node *n = &head;
@@ -151,13 +151,13 @@ public:
     // find -- return true iff present:
     bool operator[](const T v) {
         node* p = find_prev(v);
-        return (p->next != NULL && p->next->val == v);
+        return (p->next != NULL && eq(p->next->val,v));
     }
 
     // insert v if not already present; return ref to self
     oset& operator+=(const T v) {
         node* p = find_prev(v);
-        if (p->next == NULL || p->next->val != v) {
+        if (p->next == NULL || !eq(p->next->val, v)) {
             node* n = new node(v);
             n->next = p->next;
             p->next = n;
@@ -169,7 +169,7 @@ public:
     oset& operator-=(const T v) {
         node* p = find_prev(v);
         node* t;
-        if ((t = p->next) != NULL && p->next->val == v) {
+        if ((t = p->next) != NULL && eq(p->next->val, v)) {
             // already present
             p->next = t->next;
             delete t;
@@ -186,73 +186,108 @@ public:
 
     // Union.
     oset& operator+=(oset& other) {
-        if(other.begin() == other.end()) return *this;
-        //qqiu 11/22/2015: why I cannot return other as the new reference?
-        //if(this->begin() == this->end()) return other;
-        node* p = find_prev(*(other.begin()));
-        for(iter it = other.begin(); it != other.end(); it++){
-            // go to the next node whose val < *it
-            while(p->next && (!ge(p->next->val, *it))){
-                p = p->next;
-            }
+        if(this->ge == other.ge){
+            //Same comparator operation
+            //cout << "DEBUG do have same operator" << endl;
 
-            if(p->next == NULL && it != other.end()){
-                node* new_node = new node(*it);
-                p->next = new_node;
-            } else if(p->next && (ge(p->next->val, *it) && !eq(p->next->val, *it) )){
-                node* p_nxt = p->next;
-                node* new_node = new node(*it);
-                p->next = new_node;
-                new_node->next=p_nxt;
+            if(other.begin() == other.end()) return *this;
+            //qqiu 11/22/2015: why I cannot return other as the new reference?
+            //if(this->begin() == this->end()) return other;
+            node* p = find_prev(*(other.begin()));
+            for(iter it = other.begin(); it != other.end(); it++){
+                // go to the next node whose val < *it
+                while(p->next && (!ge(p->next->val, *it))){
+                    p = p->next;
+                }
+
+                if(p->next == NULL && it != other.end()){
+                    node* new_node = new node(*it);
+                    p->next = new_node;
+                } else if(p->next && (ge(p->next->val, *it) && !eq(p->next->val, *it) )){
+                    node* p_nxt = p->next;
+                    node* new_node = new node(*it);
+                    p->next = new_node;
+                    new_node->next=p_nxt;
+                }
             }
+            return *this;
+        }else{
+            //cout << "DEBUG do _NOT_ have same operator" << endl;
+            //Not the same comparator, use O(N^2) version
+            for (iter i = other.begin(); i != other.end(); ++i) {
+                operator+=(*i);
+            }
+            return *this; 
         }
-        return *this;
     }
 
     // Set difference.
     oset& operator-=(oset& other) {
-        if(other.begin() == other.end()) return *this;
-        if(this->begin() == this->end()) return *this;
+        if(this->ge == other.ge){
+            //have same comparator, use O(N) version
+            //cout << "DEBUG do have same operator" << endl;
+            if(other.begin() == other.end()) return *this;
+            if(this->begin() == this->end()) return *this;
 
-        node* p = find_prev(*(other.begin()));
-        for(iter it = other.begin(); it != other.end(); it++){
-            while(p->next && !ge(p->next->val, *it))
-                p = p->next;
-            if(p->next == NULL){
-                return *this;
-            } else if(p->next && eq(*it, p->next->val)){
-                node* p_nxt = p->next;
-                p->next = p_nxt->next;
-                delete p_nxt;
+            node* p = find_prev(*(other.begin()));
+            for(iter it = other.begin(); it != other.end(); it++){
+                while(p->next && !ge(p->next->val, *it))
+                    p = p->next;
+                if(p->next == NULL){
+                    return *this;
+                } else if(p->next && eq(*it, p->next->val)){
+                    node* p_nxt = p->next;
+                    p->next = p_nxt->next;
+                    delete p_nxt;
+                }
             }
+            return *this;
+        }else{
+            //cout << "DEBUG do _NOT_ have same operator" << endl;
+            for (iter i = other.begin(); i != other.end(); ++i) {
+                operator-=(*i);
+            }
+            return *this;
         }
-        return *this;
     }
 
     // Intersection.
     oset& operator*=(oset& other) {
-        if(other.begin() == other.end()) {
+        if(this->ge == other.ge){
+            //cout << "DEBUG do have same operator" << endl;
+            if(other.begin() == other.end()) {
+                clear();
+                return *this;
+            }
+            if(this->begin() == this->end()) return *this;
+            node *ans, *q;
+            //dummy node for ans array
+            q = ans = new node;
+
+            node* p = find_prev(*(other.begin()));
+            for(iter it = other.begin(); it != other.end(); it++){
+                while(p->next && !ge(p->next->val, *it))
+                    p = p->next;
+                if(p->next && eq(*it, p->next->val)){
+                    q->next = new node(*it);
+                    q = q->next;
+                }
+            }
             clear();
+            (&head)->next = ans->next;
+            delete ans;
+            return *this;
+        }else{
+            //cout << "DEBUG do _NOT_ have same operator" << endl;
+            oset temp;      // empty
+            for (iter i = begin(); i != end(); ++i) {
+                if (other[*i]) temp+=(*i);
+            }
+            clear();
+            operator+=(temp);   // union
+            // NB: temp is destructed as we leave this scope
             return *this;
         }
-        if(this->begin() == this->end()) return *this;
-        node *ans, *q;
-        //dummy node for ans array
-        q = ans = new node;
-
-        node* p = find_prev(*(other.begin()));
-        for(iter it = other.begin(); it != other.end(); it++){
-            while(p->next && !ge(p->next->val, *it))
-                p = p->next;
-            if(p->next && eq(*it, p->next->val)){
-                q->next = new node(*it);
-                q = q->next;
-            }
-        }
-        clear();
-        (&head)->next = ans->next;
-        delete ans;
-        return *this;
     }
 };
 

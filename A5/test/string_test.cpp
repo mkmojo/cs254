@@ -21,16 +21,15 @@ bool str_insensitive_ge(const string & a, const string & b){
 
 class StringTest : public ::testing::Test {
     protected:
-        oset<string> os;
         void virtual SetUp(){}
         void virtual TearDown(){}
 };
 
 TEST_F(StringTest, InsertWithOrder){
-    vector<string> s_init = {"a", "b", "a", "c"};
+    oset<string> os;
+    vector<string> s_init = {"a", "b", "a", "c", "hello", "HellO"};
     for(auto &&it:s_init) os += it;
-
-    vector<string> s_res = {"a", "b", "c"};
+    vector<string> s_res = {"HellO", "a", "b", "c", "hello"};
 
     int i = 0;
     for(auto it = os.begin(); it != os.end(); it++){
