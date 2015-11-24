@@ -7,7 +7,7 @@ using std::cout;
 using std::endl;
 using std::function;
 
-template<typename T>
+template<typename T, typename GE = std::greater_equal<T> >
 class oset {
     class node {
      public:
@@ -56,8 +56,7 @@ class oset {
  private:
     iter start;         // initialized in the constructors below
     iter finish;        // initialized in the constructors below
-
-    bool(*ge)(const T&, const T&);
+    GE ge;
 
  public:
     iter begin() {
@@ -69,33 +68,23 @@ class oset {
 
     //--------------------------------------
     // Constructors and destructor
-    static bool default_ge(const T& a, const T& b){
-        return a >= b;
-    }
 
-    bool default_eq(const T& a, const T&b){
-        return default_ge(a, b) && default_ge(b, a);
-    }
-
-    bool eq(const T& a, const T& b){
+    bool eq(const T& a, const T& b) const{
         return ge(a, b) && ge(b, a);
     }
 
     // new empty set:
-    oset( bool(*op_ge)(const T&, const T&)=oset::default_ge)
-        :  start(&head), finish(&beyond), ge(op_ge) {
+    oset() :  start(&head), finish(&beyond), ge() {
         head.next = NULL;
     }
 
     // new singleton set:
-    oset(T v, bool(*op_ge)(const T&, const T&)=oset::default_ge)
-        :  start(&head), finish(&beyond), ge(op_ge){
+    oset(T v) :  start(&head), finish(&beyond), ge() {
         head.next = new node(v);
     }
 
     // copy constructor:
-    oset(oset& other, bool(*op_ge)(const T&, const T&)=oset::default_ge)
-        : start(&head), finish(&beyond), ge(op_ge){
+    oset(oset& other) : start(&head), finish(&beyond), ge(){
         node *o = other.head.next;
         node *n = &head;
         while (o) {
@@ -186,7 +175,6 @@ public:
 
     // Union.
     oset& operator+=(oset& other) {
-        if(this->ge == other.ge){
             //Same comparator operation
             //cout << "DEBUG do have same operator" << endl;
 
@@ -211,19 +199,10 @@ public:
                 }
             }
             return *this;
-        }else{
-            //cout << "DEBUG do _NOT_ have same operator" << endl;
-            //Not the same comparator, use O(N^2) version
-            for (iter i = other.begin(); i != other.end(); ++i) {
-                operator+=(*i);
-            }
-            return *this; 
-        }
     }
 
     // Set difference.
     oset& operator-=(oset& other) {
-        if(this->ge == other.ge){
             //have same comparator, use O(N) version
             //cout << "DEBUG do have same operator" << endl;
             if(other.begin() == other.end()) return *this;
@@ -242,18 +221,10 @@ public:
                 }
             }
             return *this;
-        }else{
-            //cout << "DEBUG do _NOT_ have same operator" << endl;
-            for (iter i = other.begin(); i != other.end(); ++i) {
-                operator-=(*i);
-            }
-            return *this;
-        }
     }
 
     // Intersection.
     oset& operator*=(oset& other) {
-        if(this->ge == other.ge){
             //cout << "DEBUG do have same operator" << endl;
             if(other.begin() == other.end()) {
                 clear();
@@ -277,24 +248,13 @@ public:
             (&head)->next = ans->next;
             delete ans;
             return *this;
-        }else{
-            //cout << "DEBUG do _NOT_ have same operator" << endl;
-            oset temp;      // empty
-            for (iter i = begin(); i != end(); ++i) {
-                if (other[*i]) temp+=(*i);
-            }
-            clear();
-            operator+=(temp);   // union
-            // NB: temp is destructed as we leave this scope
-            return *this;
-        }
     }
 };
 
 
-template<typename T>
-void print(oset<T>& OS) {
-    using iter = typename oset<T>::iter;
+template<typename T, typename GE=std::greater_equal<T> >
+void print(oset<T, GE>& OS) {
+    using iter = typename oset<T, GE>::iter;
     for (iter i = OS.begin(); i != OS.end(); ++i) {
         cout << *i << " ";
     }
