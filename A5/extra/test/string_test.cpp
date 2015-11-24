@@ -9,15 +9,17 @@ using std::string;
 using std::cout;
 using std::endl;
 
-bool str_insensitive_ge(const string & a, const string & b){
-    for(int i=0;i<a.size() && i<b.size();i++){
-        char ca = tolower(a[i]);
-        char cb = tolower(b[i]);
-        if(ca < cb) return false;
+struct str_insensitive_ge{
+    bool operator()(const string& a, const string& b)const{
+        for(int i=0;i<a.size() && i<b.size();i++){
+            char ca = tolower(a[i]);
+            char cb = tolower(b[i]);
+            if(ca < cb) return false;
+        }
+        if(a.size() < b.size()) return false;
+        return true;
     }
-    if(a.size() < b.size()) return false;
-    return true;
-}
+};
 
 class StringTest : public ::testing::Test {
     protected:
@@ -42,7 +44,7 @@ TEST_F(StringTest, UnionTest){
     vector<string> vu = {"a", "h", "MM", "zz"};
     vector<string> vv = {"e", "f", "MM", "pp", "zz"};
     vector<string> vres = {"a", "e", "f", "h", "MM", "pp", "zz"};
-    oset<string> osu(str_insensitive_ge), osv(str_insensitive_ge);
+    oset<string, str_insensitive_ge> osu, osv;
     for(auto &&it:vu) osu += it;
     for(auto &&it:vv) osv += it;
 
@@ -60,7 +62,7 @@ TEST_F(StringTest, UnionEmpty){
     vector<string> vu = {};
     vector<string> vv = {"b", "F", "h"};
     vector<string> vres = {"b", "F", "h"};
-    oset<string> osu(str_insensitive_ge), osv(str_insensitive_ge), ores;
+    oset<string,str_insensitive_ge> osu, osv, ores;
     for(auto &&it:vu) osu += it;
     for(auto &&it:vv) osv += it;
 
