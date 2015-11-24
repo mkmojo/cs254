@@ -4,16 +4,16 @@ using std::cout;
 using std::endl;
 using std::flush;
 
-template<typename T>
-bool ge(const T& a, const T& b){
-    return a>=b;
-}
-
+struct ge {
+    bool operator()(const int &a, const int &b) const{
+        return a >= b;
+    }
+};
 
 int main() {
     // Some simple testing code.  You'll need a lot more.
 
-    oset<int> S(ge<int>);     // empty set
+    oset<int,ge> S;     // empty set
     S += 3;     // now should contain 3
 
     cout << S[3] << " ";            // should print 1 (true) : 3 is in S
@@ -26,10 +26,10 @@ int main() {
     oset<int> T(3);                      // singleton
     print(T);              // should print 3
 
-    oset<int> U(S);                      // copy of S
-    oset<int> V(S);                      // copy of S
+    oset<int, ge> U(S);                      // copy of S
+    oset<int, ge> V(S);                      // copy of S
 
-    oset<int> W; W = S;  print(W);      // 3 5 7
+    oset<int, ge> W; W = S;  print(W);      // 3 5 7
 
     S -= 4;                         // should be a no-op
     S -= 3;
