@@ -281,6 +281,14 @@ class oset {
     bool empty(){
         return size() == 0;
     }
+
+    iter find(const T& val){
+        using iter = typename oset<T, GE>::iter;
+        for(iter i = begin(); i != end(); i++){
+            if( *i == val ) return i;
+        }
+        return end();
+    }
 };
 
 
