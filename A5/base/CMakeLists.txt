@@ -10,4 +10,4 @@ include_directories(include)
 add_subdirectory(src)
 
 # add test
-add_subdirectory(test)
+ add_subdirectory(test)

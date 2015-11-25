@@ -8,18 +8,18 @@ using std::string;
 using std::cout;
 using std::endl;
 
-class OsetTest : public ::testing::Test {
+class DoubleTest : public ::testing::Test {
     protected:
-        oset os;
+        oset<double> os;
         void virtual SetUp(){}
         void virtual TearDown(){}
 };
 
-TEST_F(OsetTest, InsertWithOrder){
-    vector<int> s_init = {3,2,4,5,7,3};
+TEST_F(DoubleTest, InsertWithOrder){
+    vector<double> s_init = {3.0,2.0,4.0,5.0,7.0,3.0};
     for(auto &&it:s_init) os += it;
 
-    vector<int> s_res = {2,3,4,5,7};
+    vector<double> s_res = {2.0,3.0,4.0,5.0,7.0};
 
     int i = 0;
     for(auto it = os.begin(); it != os.end(); it++){
@@ -28,11 +28,11 @@ TEST_F(OsetTest, InsertWithOrder){
     }
 }
 
-TEST_F(OsetTest, UnionTest){
-    vector<int> vu = {2, 6, 10, 30};
-    vector<int> vv = {6, 7, 15, 20, 30};
-    vector<int> vres = {2, 6, 7, 10, 15, 20, 30};
-    oset osu, osv;
+TEST_F(DoubleTest, UnionTest){
+    vector<double> vu = {2, 6, 10, 30};
+    vector<double> vv = {6, 7, 15, 20, 30};
+    vector<double> vres = {2, 6, 7, 10, 15, 20, 30};
+    oset<double> osu, osv;
     for(auto &&it:vu) osu += it;
     for(auto &&it:vv) osv += it;
 
@@ -47,11 +47,11 @@ TEST_F(OsetTest, UnionTest){
     ASSERT_EQ(i, vres.size());
 }
 
-TEST_F(OsetTest, UnionEmpty){
-    vector<int> vu = {};
-    vector<int> vv = {2, 6, 10};
-    vector<int> vres = {2, 6, 10};
-    oset osu, osv, ores;
+TEST_F(DoubleTest, UnionEmpty){
+    vector<double> vu = {};
+    vector<double> vv = {2, 6, 10};
+    vector<double> vres = {2, 6, 10};
+    oset<double> osu, osv, ores;
     for(auto &&it:vu) osu += it;
     for(auto &&it:vv) osv += it;
 
@@ -65,11 +65,11 @@ TEST_F(OsetTest, UnionEmpty){
     }
 }
 
-TEST_F(OsetTest, DifferenceTest){
-    vector<int> vu = {2, 6, 10};
-    vector<int> vv = {6, 7, 10};
-    vector<int> vres = {2};
-    oset osu, osv;
+TEST_F(DoubleTest, DifferenceTest){
+    vector<double> vu = {2, 6, 10};
+    vector<double> vv = {6, 7, 10};
+    vector<double> vres = {2};
+    oset<double> osu, osv;
     for(auto &&it:vu) osu += it;
     for(auto &&it:vv) osv += it;
 
@@ -86,11 +86,11 @@ TEST_F(OsetTest, DifferenceTest){
     ASSERT_EQ(i, vres.size());
 }
 
-TEST_F(OsetTest, DifferenceEmpty){
-    vector<int> vu = {2,6,10};
-    vector<int> vv = {};
-    vector<int> vres = {2,6,10};
-    oset osu, osv;
+TEST_F(DoubleTest, DifferenceEmpty){
+    vector<double> vu = {2,6,10};
+    vector<double> vv = {};
+    vector<double> vres = {2,6,10};
+    oset<double> osu, osv;
     for(auto &&it:vu) osu += it;
     for(auto &&it:vv) osv += it;
 
@@ -104,11 +104,11 @@ TEST_F(OsetTest, DifferenceEmpty){
     }
 }
 
-TEST_F(OsetTest, IntersectionTest){
-    vector<int> vu = {2,7,10,15};
-    vector<int> vv = {4,7,10,20};
-    vector<int> vres = {7,10};
-    oset osu, osv;
+TEST_F(DoubleTest, IntersectionTest){
+    vector<double> vu = {2,7,10,15};
+    vector<double> vv = {4,7,10,20};
+    vector<double> vres = {7,10};
+    oset<double> osu, osv;
     for(auto &&it:vu) osu += it;
     for(auto &&it:vv) osv += it;
 
@@ -123,25 +123,20 @@ TEST_F(OsetTest, IntersectionTest){
     ASSERT_EQ(i, vres.size());
 }
 
-TEST_F(OsetTest, IntersectionEmpty){
-    vector<int> vu = {3, 4};
-    vector<int> vv = {};
-    vector<int> vres = {};
-    oset osu, osv;
+TEST_F(DoubleTest, IntersectionEmpty){
+    vector<double> vu = {3, 4};
+    vector<double> vv = {};
+    vector<double> vres = {};
+    oset<double> osu, osv;
     for(auto &&it:vu) osu += it;
     for(auto &&it:vv) osv += it;
 
     osu *= osv;
-    print(osu);
+    //print(osu);
 
     int i = 0;
     for(auto it = osu.begin(); it != osu.end(); it++){
         EXPECT_EQ(*it, vres[i]);
         ++i;
     }
-}
-
-int main(int argc, char* argv[]){
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
 }
