@@ -1,3 +1,3 @@
-base contains all files for base assignment.
+base/ contains all files for base assignment.
 
-extra contains all files for extra credit.
+extra/ contains all files for extra credit.
