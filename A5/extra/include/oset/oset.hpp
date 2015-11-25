@@ -277,6 +277,10 @@ class oset {
         }
         return count;
     }
+
+    bool empty(){
+        return size() == 0;
+    }
 };
 
 
