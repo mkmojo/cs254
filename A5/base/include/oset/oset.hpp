@@ -188,7 +188,7 @@ public:
     oset& operator+=(oset& other) {
         if(this->ge == other.ge){
             //Same comparator operation
-            //cout << "DEBUG do have same operator" << endl;
+            cout << "DEBUG same operator, use O(N)." << endl;
 
             if(other.begin() == other.end()) return *this;
             //qqiu 11/22/2015: why I cannot return other as the new reference?
@@ -212,7 +212,7 @@ public:
             }
             return *this;
         }else{
-            //cout << "DEBUG do _NOT_ have same operator" << endl;
+            cout << "DEBUG _NOT_ same operator, use O(N^2)" << endl;
             //Not the same comparator, use O(N^2) version
             for (iter i = other.begin(); i != other.end(); ++i) {
                 operator+=(*i);
@@ -225,7 +225,7 @@ public:
     oset& operator-=(oset& other) {
         if(this->ge == other.ge){
             //have same comparator, use O(N) version
-            //cout << "DEBUG do have same operator" << endl;
+            cout << "DEBUG same operator, use O(N)." << endl;
             if(other.begin() == other.end()) return *this;
             if(this->begin() == this->end()) return *this;
 
@@ -243,7 +243,7 @@ public:
             }
             return *this;
         }else{
-            //cout << "DEBUG do _NOT_ have same operator" << endl;
+            cout << "DEBUG _NOT_ same operator, use O(N^2)." << endl;
             for (iter i = other.begin(); i != other.end(); ++i) {
                 operator-=(*i);
             }
@@ -254,7 +254,7 @@ public:
     // Intersection.
     oset& operator*=(oset& other) {
         if(this->ge == other.ge){
-            //cout << "DEBUG do have same operator" << endl;
+            cout << "DEBUG same operator, use O(N)." << endl;
             if(other.begin() == other.end()) {
                 clear();
                 return *this;
@@ -278,7 +278,7 @@ public:
             delete ans;
             return *this;
         }else{
-            //cout << "DEBUG do _NOT_ have same operator" << endl;
+            cout << "DEBUG _NOT_ same operator, use O(N^2)." << endl;
             oset temp;      // empty
             for (iter i = begin(); i != end(); ++i) {
                 if (other[*i]) temp+=(*i);
