@@ -5,4 +5,4 @@
 ###Run Main Application
     build/src/main
 ###Run Test
-    build/test/tests
+    build/test/set_test
