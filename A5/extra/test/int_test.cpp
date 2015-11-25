@@ -17,11 +17,8 @@ class IntTest : public ::testing::Test {
 
 TEST_F(IntTest, InsertWithOrder){
     os += 5;
-    rprint(os);
     os += 3;
-    rprint(os);
     os += 4;
-    rprint(os);
     vector<int> s_res = {3, 4, 5};
 
     int i = 0;
