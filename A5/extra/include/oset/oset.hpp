@@ -289,6 +289,15 @@ class oset {
         }
         return end();
     }
+
+    size_t erase(const T& val){
+        if(operator[](val) == true){
+            operator-=(val);
+            return 1;
+        }else{
+            return 0;
+        }
+    }
 };
 
 
