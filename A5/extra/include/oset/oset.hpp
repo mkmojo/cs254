@@ -151,7 +151,8 @@ class oset {
             n->next = p->next;
             p->next->prev = n;
             p->next = n;
-            n->prev = p;
+            if(p != &head)
+                n->prev = p;
         }else if(p->next == NULL){
             //special case, do not have n->next point to beyond
             //because node beyond is not part of the list it is not
