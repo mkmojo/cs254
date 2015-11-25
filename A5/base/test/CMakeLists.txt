@@ -3,9 +3,9 @@ enable_testing()
 include_directories(${gtest_SOURCE_DIR}/include)
 
 file(GLOB TEST_SOURCES ${PROJECT_SOURCE_DIR}/test/*.cpp)
-add_executable(sample_tests ${TEST_SOURCES})
-install(TARGETS sample_tests DESTINATION ${PROJECT_SOURCE_DIR}/bin)
+add_executable(oset_test ${TEST_SOURCES})
+install(TARGETS oset_test DESTINATION ${PROJECT_SOURCE_DIR}/bin)
 
-target_link_libraries(sample_tests gtest_main)
+target_link_libraries(oset_test gtest_main)
 
-add_test(sample_tests sample_tests)
+add_test(oset_test oset_test)
