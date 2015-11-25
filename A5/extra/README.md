@@ -5,7 +5,7 @@
 ###Run Main Application
     build/src/main
 ###Run Test
-    build/test/tests
+    build/test/oset_test
 
 List of requirements satisfied:  
     - [X] Comparator provided as template parameter, not constructor argument  
