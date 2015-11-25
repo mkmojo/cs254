@@ -268,6 +268,15 @@ class oset {
         // NB: temp is destructed as we leave this scope
         return *this;
     }
+
+    // Find the size of oset
+    size_t size(){
+        int count = 0;
+        for(auto &&it : *this){
+            count++;
+        }
+        return count;
+    }
 };
 
 
