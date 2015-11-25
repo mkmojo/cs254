@@ -16,12 +16,13 @@ class IntTest : public ::testing::Test {
 };
 
 TEST_F(IntTest, InsertWithOrder){
+    os += 5;
+    rprint(os);
     os += 3;
-    ((os += 5) += 7) += 9;
-    oset<int> u(os);
-    oset<int> v(os);
-    os -= 7;
-    vector<int> s_res = {3, 5, 9};
+    rprint(os);
+    os += 4;
+    rprint(os);
+    vector<int> s_res = {3, 4, 5};
 
     int i = 0;
     for(auto it = os.begin(); it != os.end(); it++){
