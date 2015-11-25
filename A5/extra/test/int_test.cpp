@@ -16,16 +16,19 @@ class IntTest : public ::testing::Test {
 };
 
 TEST_F(IntTest, InsertWithOrder){
-    vector<int> s_init = {3,2,4,5,7,3};
-    for(auto &&it:s_init) os += it;
-
-    vector<int> s_res = {2,3,4,5,7};
+    os += 3;
+    ((os += 5) += 7) += 9;
+    oset<int> u(os);
+    oset<int> v(os);
+    os -= 7;
+    vector<int> s_res = {3, 5, 9};
 
     int i = 0;
     for(auto it = os.begin(); it != os.end(); it++){
         EXPECT_EQ(*it, s_res[i]);
         ++i;
     }
+    ASSERT_EQ(s_res.size(), i);
 }
 
 TEST_F(IntTest, UnionTest){
@@ -67,15 +70,15 @@ TEST_F(IntTest, UnionEmpty){
 
 TEST_F(IntTest, DifferenceTest){
     vector<int> vu = {2, 6, 10};
-    vector<int> vv = {6, 7, 10};
-    vector<int> vres = {2};
+    vector<int> vv = {2, 6, 10};
+    vector<int> vres = {};
     oset<int> osu, osv;
     for(auto &&it:vu) osu += it;
     for(auto &&it:vv) osv += it;
 
     //diff osu with osv
     osu -= osv;
-    //print(osu);
+    print(osu);
 
     int i = 0;
     for(auto it = osu.begin(); it != osu.end() ; it++){
