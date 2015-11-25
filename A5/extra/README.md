@@ -1,3 +1,11 @@
+##How to use:
+
+###Compile the project 
+    mkdir build && cd build && cmake .. && make
+###Run Main Application
+    build/src/main
+###Run Test
+    build/test/tests
 
 List of requirements satisfied:  
     - [X] Comparator provided as template parameter, not constructor argument  
@@ -19,3 +27,4 @@ together with some constructors.
 
 ### Extend supported methods
 size(), empty(), find(), and erase() are added to oset.
+
