@@ -9,31 +9,33 @@ using std::function;
 
 template<typename T, typename GE = std::greater_equal<T> >
 class oset {
+    public: //DEBUG, need to be private
     class node {
-     public:
-        const T val;
-        node *next;
-        node() : val(), next(NULL) {}
-        node(T v) : val(v), next(NULL) { }
+        public:
+            const T val;
+            node *next;
+            node *prev;
+            node() : val(), next(NULL), prev(NULL) { }
+            node(T v) : val(v), next(NULL), prev(NULL) { }
     };
     node head;
-        // NB: _not_ node*.  There's a dummy node here, with garbage val;
-        // Existence of this node avoids several special cases in the
-        // methods below.
+    // NB: _not_ node*.  There's a dummy node here, with garbage val;
+    // Existence of this node avoids several special cases in the
+    // methods below.
     node beyond;
-        // to simplify iterator.
+    // to simplify iterator.
 
     //--------------------------------------
     // Iterator support
 
- public:
+    public:
     class iter {
         node *pos;          // node _before_ the one with this->operator*
         // constructor is private:
         iter(node* n) : pos(n) { }
         //qqiu 11/22/2015: should I have this template parameter <T>?
-    friend class oset;      // so oset can call the (private) constructor
-    public:   
+        friend class oset;      // so oset can call the (private) constructor
+        public:   
         const T& operator*() {
             return pos->next->val;
         }
@@ -53,12 +55,12 @@ class oset {
         bool operator!=(iter other) {return pos->next != other.pos->next;}
     };
 
- private:
+    private:
     iter start;         // initialized in the constructors below
     iter finish;        // initialized in the constructors below
     GE ge;
 
- public:
+    public:
     iter begin() {
         return start;
     }
@@ -80,22 +82,19 @@ class oset {
 
     // new singleton set:
     oset(T v) :  start(&head), finish(&beyond), ge() {
-        head.next = new node(v);
+        node *n = new node(v);
+        head.next = n;
+        beyond.prev = n;
     }
 
     // copy constructor:
     oset(oset& other) : start(&head), finish(&beyond), ge(){
-        node *o = other.head.next;
-        node *n = &head;
-        while (o) {
-            n->next = new node(o->val);
-            o = o->next;
-            n = n->next;
+        for(auto &&it : other){
+            operator+=(it);
         }
-        n->next = NULL;
     }
 
- private:
+    private:
     void clear() {
         node *n = head.next;
         while (n) {
@@ -104,9 +103,10 @@ class oset {
             n = t;
         }
         head.next = NULL;
+        beyond.prev = NULL;
     }
 
- public:
+    public:
     // destructor -- clean up nodes:
     ~oset() {
         clear();
@@ -120,7 +120,7 @@ class oset {
     //--------------------------------------
     // Find, insert, and remove
 
-private:
+    private:
     // Return pointer to last node with val < v
     //
     // *** THIS CODE IMPLICITLY REQUIRES A >= OPERATOR FOR THE SET
@@ -135,8 +135,8 @@ private:
             p = p->next;
         }
     }
-        
-public:
+
+    public:
     // find -- return true iff present:
     bool operator[](const T v) {
         node* p = find_prev(v);
@@ -146,10 +146,23 @@ public:
     // insert v if not already present; return ref to self
     oset& operator+=(const T v) {
         node* p = find_prev(v);
-        if (p->next == NULL || !eq(p->next->val, v)) {
+        if (p->next && !eq(p->next->val, v)) {
             node* n = new node(v);
             n->next = p->next;
+            p->next->prev = n;
             p->next = n;
+            n->prev = p;
+        }else if(p->next == NULL){
+            //special case, do not have n->next point to beyond
+            //because node beyond is not part of the list it is not
+            //actual node
+
+            node* n = new node(v);
+            p->next = n;
+            if(p != &head)
+                n->prev = p;
+            beyond.prev = n;
+        }else{
         }
         return *this;
     }
@@ -157,11 +170,29 @@ public:
     // remove v if present; return ref to self
     oset& operator-=(const T v) {
         node* p = find_prev(v);
-        node* t;
-        if ((t = p->next) != NULL && eq(p->next->val, v)) {
-            // already present
-            p->next = t->next;
-            delete t;
+        node* t = p->next;
+        if( t != NULL && eq(p->next->val, v)){
+            if ((p != &head) && t != beyond.prev) {
+                // already present and in the middle
+                p->next = t->next;
+                t->next->prev = p;
+                delete t;
+            }else if(p == &head  && t != beyond.prev){
+                //delete first element
+                p->next = t->next;
+                t->next->prev = NULL;
+                delete t;
+            }else if(p != &head && t == beyond.prev){
+                //delete last element
+                p->next = t->next;
+                beyond.prev = p;
+                delete t;
+            }else{
+                // t is the only element
+                head.next = NULL;
+                beyond.prev = NULL;
+                delete t;
+            }
         }
         return *this;
     }
@@ -175,79 +206,30 @@ public:
 
     // Union.
     oset& operator+=(oset& other) {
-            //Same comparator operation
-            //cout << "DEBUG do have same operator" << endl;
-
-            if(other.begin() == other.end()) return *this;
-            //qqiu 11/22/2015: why I cannot return other as the new reference?
-            //if(this->begin() == this->end()) return other;
-            node* p = find_prev(*(other.begin()));
-            for(iter it = other.begin(); it != other.end(); it++){
-                // go to the next node whose val < *it
-                while(p->next && (!ge(p->next->val, *it))){
-                    p = p->next;
-                }
-
-                if(p->next == NULL && it != other.end()){
-                    node* new_node = new node(*it);
-                    p->next = new_node;
-                } else if(p->next && (ge(p->next->val, *it) && !eq(p->next->val, *it) )){
-                    node* p_nxt = p->next;
-                    node* new_node = new node(*it);
-                    p->next = new_node;
-                    new_node->next=p_nxt;
-                }
-            }
-            return *this;
+        for (iter i = other.begin(); i != other.end(); ++i) {
+            operator+=(*i);
+        }
+        return *this;
     }
 
     // Set difference.
     oset& operator-=(oset& other) {
-            //have same comparator, use O(N) version
-            //cout << "DEBUG do have same operator" << endl;
-            if(other.begin() == other.end()) return *this;
-            if(this->begin() == this->end()) return *this;
-
-            node* p = find_prev(*(other.begin()));
-            for(iter it = other.begin(); it != other.end(); it++){
-                while(p->next && !ge(p->next->val, *it))
-                    p = p->next;
-                if(p->next == NULL){
-                    return *this;
-                } else if(p->next && eq(*it, p->next->val)){
-                    node* p_nxt = p->next;
-                    p->next = p_nxt->next;
-                    delete p_nxt;
-                }
-            }
-            return *this;
+        for (iter i = other.begin(); i != other.end(); ++i) {
+            operator-=(*i);
+        }
+        return *this;
     }
 
     // Intersection.
     oset& operator*=(oset& other) {
-            //cout << "DEBUG do have same operator" << endl;
-            if(other.begin() == other.end()) {
-                clear();
-                return *this;
-            }
-            if(this->begin() == this->end()) return *this;
-            node *ans, *q;
-            //dummy node for ans array
-            q = ans = new node;
-
-            node* p = find_prev(*(other.begin()));
-            for(iter it = other.begin(); it != other.end(); it++){
-                while(p->next && !ge(p->next->val, *it))
-                    p = p->next;
-                if(p->next && eq(*it, p->next->val)){
-                    q->next = new node(*it);
-                    q = q->next;
-                }
-            }
-            clear();
-            (&head)->next = ans->next;
-            delete ans;
-            return *this;
+        oset temp;      // empty
+        for (iter i = begin(); i != end(); ++i) {
+            if (other[*i]) temp+=(*i);
+        }
+        clear();
+        operator+=(temp);   // union
+        // NB: temp is destructed as we leave this scope
+        return *this;
     }
 };
 
@@ -261,4 +243,14 @@ void print(oset<T, GE>& OS) {
     cout << endl;
 }
 
+template<typename T, typename GE=std::greater_equal<T> >
+void rprint(oset<T, GE>& OS) {
+    using node = typename oset<T, GE>::node;
+    node *cnt = OS.beyond.prev;
+    while(cnt){
+        cout << cnt->val << " ";
+        cnt = cnt->prev;
+    }
+    cout << endl;
+}
 #endif
