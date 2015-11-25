@@ -55,9 +55,36 @@ class oset {
         bool operator!=(iter other) {return pos->next != other.pos->next;}
     };
 
+    class riter {
+        node *pos;          // node _before_ the one with this->operator*
+        // constructor is private:
+        riter(node* n) : pos(n) { }
+        friend class oset;      // so oset can call the (private) constructor
+        public:   
+        const T& operator*() {
+            return pos->prev->val;
+        }
+        // support forward iteration.  This is prefix version (++p).
+        riter& operator++() {
+            if (pos != NULL) pos = pos->prev;
+            return *this;
+        }
+        // and this is the postfix version (p++).
+        // Note that it returns a copy, _not_ a reference.
+        riter operator++(int) {
+            riter rtn = *this;
+            if (pos != NULL) pos = pos->prev;
+            return rtn;
+        }
+        bool operator==(riter other) {return pos->prev == other.pos->prev;}
+        bool operator!=(riter other) {return pos->prev != other.pos->prev;}
+    };
+
     private:
     iter start;         // initialized in the constructors below
     iter finish;        // initialized in the constructors below
+    riter rstart;
+    riter rfinish;
     GE ge;
 
     public:
@@ -68,6 +95,14 @@ class oset {
         return finish;
     }
 
+    riter rbegin(){
+        return rstart;
+    }
+
+    riter rend() {
+        return rfinish;
+    }
+
     //--------------------------------------
     // Constructors and destructor
 
@@ -76,19 +111,20 @@ class oset {
     }
 
     // new empty set:
-    oset() :  start(&head), finish(&beyond), ge() {
+    oset() :  start(&head), finish(&beyond), rstart(&beyond), rfinish(&head), ge() {
         head.next = NULL;
+        beyond.prev = NULL;
     }
 
     // new singleton set:
-    oset(T v) :  start(&head), finish(&beyond), ge() {
+    oset(T v) :  start(&head), finish(&beyond),rstart(&beyond), rfinish(&head), ge() {
         node *n = new node(v);
         head.next = n;
         beyond.prev = n;
     }
 
     // copy constructor:
-    oset(oset& other) : start(&head), finish(&beyond), ge(){
+    oset(oset& other) : start(&head), finish(&beyond), rstart(&beyond), rfinish(&head), ge(){
         for(auto &&it : other){
             operator+=(it);
         }
@@ -246,11 +282,9 @@ void print(oset<T, GE>& OS) {
 
 template<typename T, typename GE=std::greater_equal<T> >
 void rprint(oset<T, GE>& OS) {
-    using node = typename oset<T, GE>::node;
-    node *cnt = OS.beyond.prev;
-    while(cnt){
-        cout << cnt->val << " ";
-        cnt = cnt->prev;
+    using riter = typename oset<T, GE>::riter;
+    for (riter i = OS.rbegin(); i != OS.rend(); ++i) {
+        cout << *i << " ";
     }
     cout << endl;
 }
