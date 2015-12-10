@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <functional>
+#include <string>
 using std::cout;
 using std::endl;
 using std::function;
@@ -151,6 +152,7 @@ class oset {
     oset& operator=(oset& other) {
         clear();
         operator+=(other);      // union (see below)
+		return *this;
     }
 
     //--------------------------------------
