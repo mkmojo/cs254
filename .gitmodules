@@ -1,0 +1,3 @@
+[submodule "A6/concurrent-mst"]
+	path = A6/concurrent-mst
+	url = https://github.com/qiuqiyuan/concurrent-mst.git
