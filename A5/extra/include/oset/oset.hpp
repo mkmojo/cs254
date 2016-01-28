@@ -151,6 +151,7 @@ class oset {
     oset& operator=(oset& other) {
         clear();
         operator+=(other);      // union (see below)
+        return *this;
     }
 
     //--------------------------------------
