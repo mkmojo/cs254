@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <functional>
+#include <string>
 using std::cout;
 using std::endl;
 using std::function;
